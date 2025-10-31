@@ -43,7 +43,7 @@ class ProductSizeSerializer(serializers.ModelSerializer):
         return product_size
 
 class ProductSerializer(serializers.ModelSerializer):
-    photo = Base64ImageField(required=False)
+    photo = Base64ImageField(required=False, allow_null=True, allow_empty_file=True)
     sizes = ProductSizeSerializer(many=True, required=False)
 
     class Meta:
