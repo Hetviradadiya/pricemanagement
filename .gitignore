@@ -13,7 +13,7 @@ ok1.py
 
 # Media files
 media/
-static/
+# static/
 
 # Requirements for data entry using automation
 auto_requirements.txt

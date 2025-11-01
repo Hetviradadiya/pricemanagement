@@ -63,6 +63,16 @@ class BulkProductCreateAPIView(APIView):
         print(f"🔧 PATCH request for product ID: {pk}")
         print(f"📝 Request data: {request.data}")
         
+        # Debug photo field specifically
+        if 'photo' in request.data:
+            photo_data = request.data['photo']
+            print(f"📷 Photo field type: {type(photo_data)}")
+            print(f"📷 Photo field value: {photo_data}")
+            if isinstance(photo_data, (list, tuple)):
+                print(f"📷 Photo is array/list with {len(photo_data)} items")
+                if len(photo_data) > 0:
+                    print(f"📷 First item type: {type(photo_data[0])}")
+        
         product = get_object_or_404(Product, pk=pk)
         print(f"✅ Found product: {product.name}")
         
@@ -71,7 +81,10 @@ class BulkProductCreateAPIView(APIView):
         print(f"🗑️ Deleted existing sizes/prices/dealers for product {pk}")
         
         serializer = ProductSerializer(product, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            print(f"❌ Serializer validation errors: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer.save()
         print(f"💾 Successfully updated product {pk}")
         return Response(serializer.data, status=status.HTTP_200_OK)
