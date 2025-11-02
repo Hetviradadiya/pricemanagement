@@ -1430,3 +1430,4 @@ let productCount = 0;
       window.addEventListener("DOMContentLoaded", () => {
         displayProductsWithNestedStructure();
       });
+      

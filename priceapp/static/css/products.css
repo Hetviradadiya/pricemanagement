@@ -263,3 +263,9 @@
           white-space: nowrap;
         }
       }
+
+      .logout-btn i {
+        margin-right: 4px;
+        font-size: 14px;
+        vertical-align: middle;
+        }
