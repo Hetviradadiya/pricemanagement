@@ -1,4 +1,4 @@
-let productCount = 0;
+  let productCount = 0;
       let priceCount = 0;
       let sizeCount = 0;
       let editingProductId = null;
@@ -1305,6 +1305,7 @@ let productCount = 0;
                     // Price inputs in order they appear in the HTML
                     const inputs = currentPriceRow.querySelectorAll('input');
                     let inputIndex = 0;
+                    
                     if (inputs[inputIndex]) inputs[inputIndex].value = price.price || '';
                     inputIndex++;
                     if (inputs[inputIndex]) inputs[inputIndex].value = price.discount || '';
@@ -1384,3 +1385,4 @@ let productCount = 0;
       window.addEventListener("DOMContentLoaded", () => {
         displayProductsWithNestedStructure();
       });
+      
