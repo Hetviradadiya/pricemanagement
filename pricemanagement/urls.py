@@ -18,11 +18,17 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import redirect
 from priceapp.views import cors_media_serve
+
+def redirect_to_login(request):
+    """Redirect root URL to login page"""
+    return redirect('login')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('priceapp.urls')),
+    path('', redirect_to_login, name='home'),  # Redirect root to login
+    path('', include('priceapp.urls')),  # Keep app URLs for login/, product/, etc.
     
 ]
 
