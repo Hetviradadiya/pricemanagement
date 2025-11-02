@@ -1,4 +1,4 @@
-  let productCount = 0;
+let productCount = 0;
       let priceCount = 0;
       let sizeCount = 0;
       let editingProductId = null;
@@ -134,12 +134,55 @@
       }
 
       // Helper function to convert file to base64
-      function fileToBase64(file) {
+      // function fileToBase64(file) {
+      //   return new Promise((resolve, reject) => {
+      //     const reader = new FileReader();
+      //     reader.readAsDataURL(file);
+      //     reader.onload = () => resolve(reader.result);
+      //     reader.onerror = error => reject(error);
+      //   });
+      // }
+
+      // Resize image before converting to base64
+      function resizeImageFile(file, maxSize = 800) {
         return new Promise((resolve, reject) => {
+          const img = new Image();
           const reader = new FileReader();
+          reader.onload = function (e) {
+            img.src = e.target.result;
+          };
+          img.onload = function () {
+            let width = img.width;
+            let height = img.height;
+            if (width > maxSize || height > maxSize) {
+              if (width > height) {
+                height = Math.round((height * maxSize) / width);
+                width = maxSize;
+              } else {
+                width = Math.round((width * maxSize) / height);
+                height = maxSize;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            // JPEG for best compression, quality 0.7
+            canvas.toBlob(
+              (blob) => {
+                const resizedReader = new FileReader();
+                resizedReader.onload = () => resolve(resizedReader.result);
+                resizedReader.onerror = reject;
+                resizedReader.readAsDataURL(blob);
+              },
+              'image/jpeg',
+              0.7
+            );
+          };
+          img.onerror = reject;
+          reader.onerror = reject;
           reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = error => reject(error);
         });
       }
 
@@ -744,7 +787,8 @@
               if (productData.photo && productData.photo instanceof File) {
                 try {
                   console.log(`📷 Converting photo to base64 for product ${index + 1}: ${productData.photo.name}`);
-                  const base64Photo = await fileToBase64(productData.photo);
+                  // const base64Photo = await fileToBase64(productData.photo);
+                  const base64Photo = await resizeImageFile(file, 800); // 800px max dimension
                   console.log(`✅ Photo converted to base64. Length: ${base64Photo.length} characters`);
                   productData.photo = base64Photo;
                 } catch (err) {
@@ -849,7 +893,8 @@
             // New photo selected - convert to base64
             try {
               console.log(`📷 Converting new photo to base64 for update: ${productData.photo.name}`);
-              const base64Photo = await fileToBase64(productData.photo);
+              // const base64Photo = await fileToBase64(productData.photo);
+              const base64Photo = await resizeImageFile(file, 800); // 800px max dimension
               console.log(`✅ New photo converted to base64 for update. Length: ${base64Photo.length} characters`);
               productData.photo = base64Photo;
             } catch (err) {
@@ -1385,4 +1430,3 @@
       window.addEventListener("DOMContentLoaded", () => {
         displayProductsWithNestedStructure();
       });
-      

@@ -27,17 +27,17 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+# import cloudinary
+# import cloudinary.uploader
+# import cloudinary.api
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dh2xuwmxn',
-    'API_KEY': '734558822149593',
-    'API_SECRET': 'wF0YzCi2cqB_fkRhwQbqiIMcPv8',
-}
+# CLOUDINARY_STORAGE = {
+#     'CLOUD_NAME': 'dh2xuwmxn',
+#     'API_KEY': '734558822149593',
+#     'API_SECRET': 'wF0YzCi2cqB_fkRhwQbqiIMcPv8',
+# }
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Application definition
 
