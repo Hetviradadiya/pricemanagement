@@ -143,48 +143,9 @@ let productCount = 0;
       //   });
       // }
 
-      // Resize image before converting to base64
-      function resizeImageFile(file, maxSize = 800) {
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            img.src = e.target.result;
-          };
-          img.onload = function () {
-            let width = img.width;
-            let height = img.height;
-            if (width > maxSize || height > maxSize) {
-              if (width > height) {
-                height = Math.round((height * maxSize) / width);
-                width = maxSize;
-              } else {
-                width = Math.round((width * maxSize) / height);
-                height = maxSize;
-              }
-            }
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            // JPEG for best compression, quality 0.7
-            canvas.toBlob(
-              (blob) => {
-                const resizedReader = new FileReader();
-                resizedReader.onload = () => resolve(resizedReader.result);
-                resizedReader.onerror = reject;
-                resizedReader.readAsDataURL(blob);
-              },
-              'image/jpeg',
-              0.7
-            );
-          };
-          img.onerror = reject;
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      }
+      // --- Base64 and resize logic for photo upload is DISABLED for PythonAnywhere free ---
+      // Use standard file upload to Django media instead. Do NOT convert images to base64 or resize in JS.
+      // The backend should handle file uploads via multipart/form-data.
 
       // Preview selected photo
       function previewPhoto(input) {
@@ -513,10 +474,33 @@ let productCount = 0;
           <button class="btn btn-sm btn-secondary" onclick="removeProductRow(this, ${productId})">✖ Del</button>
         </td>
       `;
-        tbody.appendChild(productRow);
-        
+        if (tbody.firstChild) {
+          tbody.insertBefore(productRow, tbody.firstChild);
+        } else {
+          tbody.appendChild(productRow);
+        }
         // Show save button when product is added
         toggleSaveButtonVisibility();
+
+        // Scroll to the new row (top of list)
+        setTimeout(() => {
+          productRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Adjust scroll to account for sticky header (header height ~56px)
+          const headerOffset = 90; // Increase offset for sticky header height
+          const scroller = document.querySelector('.table-responsive') || window;
+          const rowRect = productRow.getBoundingClientRect();
+          const scrollerRect = scroller.getBoundingClientRect ? scroller.getBoundingClientRect() : { top: 0 };
+          const scrollTop = (scroller === window ? window.scrollY : scroller.scrollTop);
+          const offset = rowRect.top - scrollerRect.top - headerOffset;
+          if (scroller === window) {
+            window.scrollTo({ top: scrollTop + offset, behavior: 'smooth' });
+          } else {
+            scroller.scrollTo({ top: scrollTop + offset, behavior: 'smooth' });
+          }
+          // Focus the product name input (second cell, first input)
+          const nameInput = productRow.querySelectorAll('td')[1]?.querySelector('input');
+          if (nameInput) nameInput.focus();
+        }, 100);
       }
 
       // --- Price Calculations ---
@@ -636,9 +620,6 @@ let productCount = 0;
         }
       }
 
-      document
-        .getElementById("addProductBtn")
-        .addEventListener("click", addProductRow);
 
             document
         .getElementById("saveProductsBtn")
@@ -783,41 +764,35 @@ let productCount = 0;
           // Use Promise.all to wait for all saves to complete
           const savePromises = data.map(async (productData, index) => {
             try {
-              // Convert photo file to base64 if exists (optional)
+              // --- Base64/resize logic DISABLED ---
+              // Use standard file upload for productData.photo (File object)
+              // The backend should accept multipart/form-data for image uploads.
+              // If photo is present, keep as File; do not convert to base64.
               if (productData.photo && productData.photo instanceof File) {
-                try {
-                  console.log(`📷 Converting photo to base64 for product ${index + 1}: ${productData.photo.name}`);
-                  // const base64Photo = await fileToBase64(productData.photo);
-                  const base64Photo = await resizeImageFile(file, 800); // 800px max dimension
-                  console.log(`✅ Photo converted to base64. Length: ${base64Photo.length} characters`);
-                  productData.photo = base64Photo;
-                } catch (err) {
-                  console.error(`❌ Error converting photo to base64 for product ${index + 1}:`, err);
-                  delete productData.photo; // Remove photo if conversion fails
-                }
+                // Leave productData.photo as File; handle upload in backend
               } else if (productData.removePhoto) {
-                // This shouldn't happen in create mode, but handle it just in case
-                console.log(`📷 Remove photo flag found in create mode for product ${index + 1} - removing photo field`);
                 delete productData.photo;
                 delete productData.removePhoto;
-              } else {
-                console.log(`📷 No photo to convert for product ${index + 1} - skipping photo field`);
               }
               
               // Debug: Log the final photo value being sent for creation
               if ('photo' in productData) {
-                console.log(`📷 Final photo value for creation - type: ${typeof productData.photo}, is base64: ${typeof productData.photo === 'string' && productData.photo.startsWith('data:')}`);
+                console.log(`📷 Final photo value for creation - type: ${typeof productData.photo}`);
               } else {
                 console.log(`📷 Photo field not included in creation data`);
               }
               
+              // Use FormData for file upload
+              const formData = new FormData();
+              for (const key in productData) {
+                formData.append(key, productData[key]);
+              }
               const response = await fetch("/api/product-create/", {
                 method: "POST",
                 headers: {
-                  "Content-Type": "application/json",
                   "X-CSRFToken": getCookie("csrftoken"),
                 },
-                body: JSON.stringify(productData),
+                body: formData,
               });
               
               const result = await response.json();
@@ -888,44 +863,35 @@ let productCount = 0;
           const url = `/api/product-create/${productId}/`;
           console.log(`📡 Sending PATCH request to: ${url}`);
           
-          // Handle photo update based on different scenarios
+          // --- Base64/resize logic DISABLED for update ---
+          // Use standard file upload for productData.photo (File object)
           if (productData.photo && productData.photo instanceof File) {
-            // New photo selected - convert to base64
-            try {
-              console.log(`📷 Converting new photo to base64 for update: ${productData.photo.name}`);
-              // const base64Photo = await fileToBase64(productData.photo);
-              const base64Photo = await resizeImageFile(file, 800); // 800px max dimension
-              console.log(`✅ New photo converted to base64 for update. Length: ${base64Photo.length} characters`);
-              productData.photo = base64Photo;
-            } catch (err) {
-              console.error(`❌ Error converting photo to base64 for update:`, err);
-              delete productData.photo; // Remove photo if conversion fails
-            }
+            // Leave productData.photo as File; handle upload in backend
           } else if (productData.removePhoto) {
-            // Photo marked for removal - send empty string to remove it (Base64ImageField accepts empty string)
-            console.log(`📷 Removing photo for update as requested`);
             productData.photo = "";
-            delete productData.removePhoto; // Clean up the flag
+            delete productData.removePhoto;
           } else {
-            // No new photo selected and not marked for removal - preserve existing photo
-            console.log(`📷 No photo change for update - existing photo will be preserved`);
             delete productData.photo;
           }
           
           // Debug: Log the final photo value being sent
           if ('photo' in productData) {
-            console.log(`📷 Final photo value type: ${typeof productData.photo}, value: ${productData.photo === null ? 'null' : productData.photo === "" ? 'empty string' : 'base64 data'}`);
+            console.log(`📷 Final photo value type: ${typeof productData.photo}`);
           } else {
             console.log(`📷 Photo field not included in update data`);
           }
           
+          // Use FormData for file upload
+          const formData = new FormData();
+          for (const key in productData) {
+            formData.append(key, productData[key]);
+          }
           const response = await fetch(url, {
             method: "PATCH",
             headers: {
-              "Content-Type": "application/json",
               "X-CSRFToken": getCookie("csrftoken"),
             },
-            body: JSON.stringify(productData),
+            body: formData,
           });
           
           console.log(`📡 Response status: ${response.status}`);

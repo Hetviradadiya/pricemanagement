@@ -24,21 +24,25 @@
   </head>
   <body>
     <div class="container-fluid py-2">
-      <!-- Header Section with Search and Logout -->
+      <!-- Header Section with Search, Add Product, and Logout -->
       <div class="header-section">
         <!-- Desktop Layout -->
         <div class="row align-items-center g-2 d-none d-md-flex">
-          <div class="col-md-3">
+          <div class="col-md-3 d-flex align-items-center gap-2">
             <h3 class="mb-0">Product Entry</h3>
           </div>
-          <div class="col-md-7">
-            <div class="position-relative w-100">
+          <div class="col-md-7 d-flex align-items-center gap-2">
+            <button class="btn btn-outline-dark d-flex align-items-center justify-content-center" id="addProductBtn" style="height:44px;min-width:44px;font-size:1.1rem;white-space:nowrap;background:#f8f9fa;">
+              <i class="fa fa-plus me-1"></i> Add Product
+            </button>
+            <div class="flex-grow-1 position-relative">
               <input 
                 type="text" 
                 id="searchBox" 
                 class="search-box w-100" 
                 placeholder="Search products by name, size, code, HSN, or dealer..." 
                 oninput="searchProducts(this.value)"
+                style="height:44px;"
               >
               <button 
                 id="clearSearchBtn" 
@@ -52,31 +56,31 @@
             </div>
           </div>
           <div class="col-md-2">
-            <div class="d-flex justify-content-end">
-              <button class="btn btn-outline-danger logout-btn w-100" onclick="logout()">
+            <div class="d-flex justify-content-end align-items-center" style="height:44px;">
+              <button class="btn btn-outline-danger logout-btn w-100 d-flex align-items-center justify-content-center" onclick="logout()" style="height:44px;">
                 <i class="fa-solid fa-right-from-bracket"></i>
               </button>
             </div>
           </div>
         </div>
-        
+
         <!-- Mobile Layout -->
         <div class="d-md-none">
-          <!-- First row: Title and Logout button -->
           <div class="row align-items-center mb-2">
-            <div class="col-8">
-              <h3 class="mb-0">Product Entry</h3>
-            </div>
-            <div class="col-4">
-              <div class="d-flex justify-content-end">
-                <button class="btn btn-outline-danger logout-btn" onclick="logout()">
+            <div class="col-12">
+              <div class="d-flex align-items-center justify-content-between gap-2">
+                <h3 class="mb-0 flex-shrink-1" style="font-size:1.3rem;">Product Entry</h3>
+                <button class="btn btn-outline-dark btn-lg rounded-circle shadow-sm d-flex align-items-center justify-content-center" id="addProductBtnMobile" style="width:44px;height:44px;font-size:1.5rem;line-height:1;background:#f8f9fa;">
+                  <span class="visually-hidden">Add Product</span>
+                  <i class="fa fa-plus"></i>
+                </button>
+                <button class="btn btn-outline-danger logout-btn d-flex align-items-center justify-content-center" onclick="logout()" style="width:44px;height:44px;">
                   <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
               </div>
             </div>
           </div>
-          <!-- Second row: Full-width search -->
-          <div class="row">
+          <div class="row mb-2">
             <div class="col-12">
               <div class="position-relative w-100">
                 <input 
@@ -104,52 +108,82 @@
       <!-- Search Results Summary -->
       <div id="searchSummary" class="text-center" style="display: none;"></div>
 
-      <div class="table-responsive">
+
+      <!-- Save/Cancel Buttons (below header, above table) -->
+      <div class="row mb-2">
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-success flex-fill" id="saveProductsBtn" style="display: none;">
+            💾 Save Products
+          </button>
+          <button class="btn btn-secondary flex-fill" id="cancelEditBtn" style="display: none;" onclick="cancelEdit()">
+            ❌ Cancel Edit
+          </button>
+        </div>
+      </div>
+    <script>
+      // Only assign addProductRow to the visible Add Product button and disable the hidden one
+      function setAddProductBtnHandler() {
+        var addBtn = document.getElementById('addProductBtn');
+        var addBtnMobile = document.getElementById('addProductBtnMobile');
+        if (window.innerWidth >= 768) {
+          if (addBtn) {
+            addBtn.onclick = addProductRow;
+            addBtn.disabled = false;
+          }
+          if (addBtnMobile) {
+            addBtnMobile.onclick = null;
+            addBtnMobile.disabled = true;
+          }
+        } else {
+          if (addBtn) {
+            addBtn.onclick = null;
+            addBtn.disabled = true;
+          }
+          if (addBtnMobile) {
+            addBtnMobile.onclick = addProductRow;
+            addBtnMobile.disabled = false;
+          }
+        }
+      }
+      document.addEventListener('DOMContentLoaded', setAddProductBtnHandler);
+      window.addEventListener('resize', setAddProductBtnHandler);
+    </script>
+
+      <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
         <table
           class="table table-bordered table-hover align-middle"
           id="productTable"
+          style="min-width: 1200px;"
         >
-          <thead class="table-light">
+          <thead class="table-light" style="position: sticky; top: 0; z-index: 2; background: #f8f9fa;">
             <tr>
-              <th class="photo-column">Image</th>
-              <th>Name</th>
-              <th>Size</th>
-              <th>Code</th>
-              <th>HSN</th>
-              <th>MRP</th>
-              <th>Pay Type</th>
-              <th>Price</th>
-              <th>Disc<br><small>%/₹</small></th>
-              <th>Tax<br><small>%/₹</small></th>
-              <th>Box</th>
-              <th>Box Disc<br><small>%/₹</small></th>
-              <th>Box Tax<br><small>%/₹</small></th>
-              <th>Dealer</th>
-              <th>SLOL</th>
-              <th>Date</th>
-              <th>Dealer Price</th>
-              <th>Dealer Disc<br><small>%/₹</small></th>
-              <th>Dealer Tax<br><small>%/₹</small></th>
-              <th>Dealer Box</th>
-              <th>Dealer Box Disc<br><small>%/₹</small></th>
-              <th>Dealer Box Tax<br><small>%/₹</small></th>
-              <th class="actions-column">Actions</th>
+              <th class="photo-column" style="position: sticky; top: 0; background: #f8f9fa;">Image</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Name</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Size</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Code</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">HSN</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">MRP</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Pay Type</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Price</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Disc<br><small>%/₹</small></th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Tax<br><small>%/₹</small></th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Box</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Box Disc<br><small>%/₹</small></th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Box Tax<br><small>%/₹</small></th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Dealer</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">SLOL</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Date</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Dealer Price</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Dealer Disc<br><small>%/₹</small></th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Dealer Tax<br><small>%/₹</small></th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Dealer Box</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Dealer Box Disc<br><small>%/₹</small></th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Dealer Box Tax<br><small>%/₹</small></th>
+              <th class="actions-column" style="position: sticky; top: 0; background: #f8f9fa;">Actions</th>
             </tr>
           </thead>
           <tbody id="productList"></tbody>
         </table>
-      </div>
-
-      <div class="d-grid gap-1 mt-2">
-        <button class="btn btn-primary" id="addProductBtn">
-          + Add Product
-        </button>
-        <button class="btn btn-success" id="saveProductsBtn" style="display: none;">
-          💾 Save Products
-        </button>
-        <button class="btn btn-secondary" id="cancelEditBtn" style="display: none;" onclick="cancelEdit()">
-          ❌ Cancel Edit
-        </button>
       </div>
     </div>
 
