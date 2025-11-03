@@ -1234,9 +1234,9 @@ let productCount = 0;
         
         // Change UI to indicate edit mode
         document.getElementById("saveProductsBtn").textContent = "🔄 Update Product";
-        document.getElementById("saveProductsBtn").className = "btn btn-warning mt-2 w-100";
-        document.getElementById("saveProductsBtn").style.display = "block";
-        document.getElementById("cancelEditBtn").style.display = "block";
+        document.getElementById("saveProductsBtn").className = "btn btn-warning mt-2";
+        document.getElementById("saveProductsBtn").style = "display: block;font-size: 12px;";
+        document.getElementById("cancelEditBtn").style = "display: block;font-size: 12px;";
         
         // Show a message to user that they're in edit mode
         console.log(`📝 Editing product: ${product.name} (ID: ${product.id})`);
