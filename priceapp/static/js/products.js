@@ -33,24 +33,25 @@ let productCount = 0;
         if (clearBtn) clearBtn.style.display = 'block';
         if (clearBtnMobile) clearBtnMobile.style.display = 'block';
         
+        // Split search term into words for flexible matching
+        const searchWords = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
         const filtered = allProducts.filter(product => {
           // Search in product name
-          const nameMatch = product.name?.toLowerCase().includes(searchTerm.toLowerCase());
-          
-          // Search in sizes
-          const sizeMatch = product.sizes?.some(size => 
-            size.size?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            size.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            size.hsn?.toLowerCase().includes(searchTerm.toLowerCase())
-          );
-          
-          // Search in dealers
-          const dealerMatch = product.sizes?.some(size => 
-            size.prices?.some(price => 
-              price.dealers?.some(dealer => 
-                dealer.dlr_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                dealer.slol?.toLowerCase().includes(searchTerm.toLowerCase())
-              )
+          const nameMatch = searchWords.every(word => product.name?.toLowerCase().includes(word));
+
+          // Search in sizes (match all words in any order)
+          const sizeMatch = product.sizes?.some(size => {
+            const sizeFields = [size.size, size.code, size.hsn].map(f => (f || '').toLowerCase()).join(' ');
+            return searchWords.every(word => sizeFields.includes(word));
+          });
+
+          // Search in dealers (match all words in any order)
+          const dealerMatch = product.sizes?.some(size =>
+            size.prices?.some(price =>
+              price.dealers?.some(dealer => {
+                const dealerFields = [dealer.dlr_name, dealer.slol].map(f => (f || '').toLowerCase()).join(' ');
+                return searchWords.every(word => dealerFields.includes(word));
+              })
             )
           );
           
