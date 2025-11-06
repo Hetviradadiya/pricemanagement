@@ -39,13 +39,26 @@ class BulkProductCreateAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
+        print(f"🔧 POST request received")
+        print(f"📝 Request data type: {type(request.data)}")
+        print(f"📝 Request data: {request.data}")
+        print(f"📝 Request FILES: {request.FILES}")
+        
         # Check if we're receiving a list or single product
         if isinstance(request.data, list):
             serializer = ProductSerializer(data=request.data, many=True)
         else:
             serializer = ProductSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        
+        print(f"🔍 Serializer validation...")
+        if not serializer.is_valid():
+            print(f"❌ Serializer validation failed!")
+            print(f"❌ Serializer errors: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        print(f"✅ Serializer is valid")
+            
+        result = serializer.save()
+        print(f"✅ Serializer saved successfully: {result}")
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, pk=None):
