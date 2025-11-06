@@ -39,10 +39,28 @@ class BulkProductCreateAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
+        print(f"🌐 ===== FRONTEND DATA RECEIVED =====")
         print(f"🔧 POST request received")
         print(f"📝 Request data type: {type(request.data)}")
-        print(f"📝 Request data: {request.data}")
-        print(f"📝 Request FILES: {request.FILES}")
+        print(f"📝 Request content_type: {request.content_type}")
+        print(f"📝 Request encoding: {getattr(request, 'encoding', 'Not set')}")
+        print(f"📝 Request data keys: {list(request.data.keys())}")
+        
+        # Log each field in detail
+        for key, value in request.data.items():
+            print(f"� Field '{key}': type={type(value)} | value={str(value)[:200]}...")
+            if key == 'sizes' and isinstance(value, str):
+                try:
+                    import json
+                    parsed = json.loads(value)
+                    print(f"📦 Sizes JSON parsed successfully: {len(parsed)} items")
+                    if parsed:
+                        print(f"📦 First size structure: {list(parsed[0].keys()) if parsed else 'None'}")
+                except Exception as e:
+                    print(f"❌ Failed to parse sizes JSON: {e}")
+        
+        print(f"�📝 Request FILES: {request.FILES}")
+        print(f"🌐 ===== END FRONTEND DATA =====")
         
         # Check if we're receiving a list or single product
         if isinstance(request.data, list):
