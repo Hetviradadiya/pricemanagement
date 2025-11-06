@@ -733,6 +733,17 @@ let productCount = 0;
           });
 
           console.log("✅ Final Data:", JSON.stringify(data, null, 2));
+          
+          // Debug: Check if sizes are being collected
+          data.forEach((product, index) => {
+            console.log(`🔍 Product ${index + 1}: ${product.name}`);
+            console.log(`📦 Sizes count: ${product.sizes ? product.sizes.length : 0}`);
+            if (product.sizes && product.sizes.length > 0) {
+              product.sizes.forEach((size, sIndex) => {
+                console.log(`📏 Size ${sIndex + 1}: ${size.size}, Prices: ${size.prices ? size.prices.length : 0}`);
+              });
+            }
+          });
 
           // Check if we're in edit mode
           if (editingProductId) {
@@ -783,11 +794,35 @@ let productCount = 0;
                 console.log(`📷 Photo field not included in creation data`);
               }
               
-              // Use FormData for file upload
+              // Use FormData for file upload with proper nested data handling
               const formData = new FormData();
-              for (const key in productData) {
-                formData.append(key, productData[key]);
+              
+              // Handle photo file separately
+              if (productData.photo instanceof File) {
+                formData.append('photo', productData.photo);
+                console.log(`📷 Added photo file: ${productData.photo.name}`);
               }
+              
+              // Handle other fields - serialize nested objects as JSON strings
+              for (const key in productData) {
+                if (key !== 'photo') {
+                  if (typeof productData[key] === 'object') {
+                    const jsonData = JSON.stringify(productData[key]);
+                    formData.append(key, jsonData);
+                    console.log(`📦 Added ${key} as JSON: ${jsonData.substring(0, 200)}${jsonData.length > 200 ? '...' : ''}`);
+                  } else {
+                    formData.append(key, productData[key]);
+                    console.log(`📝 Added ${key}: ${productData[key]}`);
+                  }
+                }
+              }
+              
+              // Debug: Log all FormData entries
+              console.log(`📋 FormData contents:`);
+              for (let pair of formData.entries()) {
+                console.log(`  ${pair[0]}: ${typeof pair[1] === 'object' ? '[File]' : pair[1]}`);
+              }
+              
               const response = await fetch("/api/product-create/", {
                 method: "POST",
                 headers: {
@@ -882,11 +917,27 @@ let productCount = 0;
             console.log(`📷 Photo field not included in update data`);
           }
           
-          // Use FormData for file upload
+          // Use FormData for file upload with proper nested data handling
           const formData = new FormData();
-          for (const key in productData) {
-            formData.append(key, productData[key]);
+          
+          // Handle photo file separately
+          if (productData.photo instanceof File) {
+            formData.append('photo', productData.photo);
+          } else if (typeof productData.photo === 'string') {
+            formData.append('photo', productData.photo);
           }
+          
+          // Handle other fields - serialize nested objects as JSON strings
+          for (const key in productData) {
+            if (key !== 'photo') {
+              if (typeof productData[key] === 'object') {
+                formData.append(key, JSON.stringify(productData[key]));
+              } else {
+                formData.append(key, productData[key]);
+              }
+            }
+          }
+          
           const response = await fetch(url, {
             method: "PATCH",
             headers: {
