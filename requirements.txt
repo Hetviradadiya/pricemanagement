@@ -19,3 +19,4 @@ django-cloudinary-storage==0.3.0
 drf-extra-fields==3.7.0
 dj-database-url
 psycopg2-binary
+gunicorn
