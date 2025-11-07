@@ -95,15 +95,20 @@ WSGI_APPLICATION = 'pricemanagement.wsgi.application'
 #     }
 # }
 
-import dj_database_url
 import os
+import dj_database_url
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL')
-    )
-}
-
+if os.getenv("RENDER"):  # when running on Render
+    DATABASES = {
+        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+    }
+else:  # local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # DATABASES = {
 #     'default': {
