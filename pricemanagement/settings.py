@@ -95,31 +95,16 @@ WSGI_APPLICATION = 'pricemanagement.wsgi.application'
 #     }
 # }
 
-import os
-import dj_database_url
-
-if os.getenv("RENDER"):  # when running on Render
-    DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'pricemanagement',
+        'USER': 'user',
+        'PASSWORD': 'Radhhey@123',
+        'HOST': 'localhost', 
+        'PORT': '5432',
     }
-else:  # local development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'pricemanagement',
-#         'USER': 'user',
-#         'PASSWORD': 'Radhhey@123',
-#         'HOST': 'localhost', 
-#         'PORT': '5432',
-#     }
-# }
+}
 
 
 
