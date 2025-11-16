@@ -1153,7 +1153,7 @@ let productCount = 0;
                         dealers.forEach((dealer, dIndex) => {
                           const tr = document.createElement("tr");
                           tr.innerHTML = `
-                            ${firstProductRow ? `<td rowspan="${totalRows}">${product.photo ? `<img src="${product.photo}" alt="Photo" width="50">` : ""}</td>` : ""}
+                            ${firstProductRow ? `<td rowspan="${totalRows}">${product.photo ? `<img src="${product.photo}" alt="${product.name || 'Product'}" width="50" class="product-image" onclick="openImageModal('${product.photo}', '${product.name || 'Product Image'}')" title="Click to view full size">` : ""}</td>` : ""}
                             ${firstProductRow ? `<td rowspan="${totalRows}">${product.name || ""}</td>` : ""}
                             ${firstSizeRow ? `<td rowspan="${sizeRowsCount}">${size.size || ""}</td>` : ""}
                             ${firstSizeRow ? `<td rowspan="${sizeRowsCount}">${size.code || ""}</td>` : ""}
@@ -1188,7 +1188,7 @@ let productCount = 0;
                         // Price with no dealers
                         const tr = document.createElement("tr");
                         tr.innerHTML = `
-                          ${firstProductRow ? `<td rowspan="${totalRows}">${product.photo ? `<img src="${product.photo}" alt="Photo" width="50">` : ""}</td>` : ""}
+                          ${firstProductRow ? `<td rowspan="${totalRows}">${product.photo ? `<img src="${product.photo}" alt="${product.name || 'Product'}" width="50" class="product-image" onclick="openImageModal('${product.photo}', '${product.name || 'Product Image'}')" title="Click to view full size">` : ""}</td>` : ""}
                           ${firstProductRow ? `<td rowspan="${totalRows}">${product.name || ""}</td>` : ""}
                           ${firstSizeRow ? `<td rowspan="${sizeRowsCount}">${size.size || ""}</td>` : ""}
                           ${firstSizeRow ? `<td rowspan="${sizeRowsCount}">${size.code || ""}</td>` : ""}
@@ -1216,7 +1216,7 @@ let productCount = 0;
                     // Size with no prices
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
-                      ${firstProductRow ? `<td rowspan="${totalRows}">${product.photo ? `<img src="${product.photo}" alt="Photo" width="50">` : ""}</td>` : ""}
+                      ${firstProductRow ? `<td rowspan="${totalRows}">${product.photo ? `<img src="${product.photo}" alt="${product.name || 'Product'}" width="50" class="product-image" onclick="openImageModal('${product.photo}', '${product.name || 'Product Image'}')" title="Click to view full size">` : ""}</td>` : ""}
                       ${firstProductRow ? `<td rowspan="${totalRows}">${product.name || ""}</td>` : ""}
                       <td>${size.size || ""}</td>
                       <td>${size.code || ""}</td>
@@ -1236,7 +1236,7 @@ let productCount = 0;
                 // Product with no sizes
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                  <td>${product.photo ? `<img src="${product.photo}" alt="Photo" width="50">` : ""}</td>
+                  <td>${product.photo ? `<img src="${product.photo}" alt="${product.name || 'Product'}" width="50" class="product-image" onclick="openImageModal('${product.photo}', '${product.name || 'Product Image'}')" title="Click to view full size">` : ""}</td>
                   <td>${product.name || ""}</td>
                   <td colspan="20">No sizes defined</td>
                   <td>
