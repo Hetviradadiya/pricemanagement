@@ -1,14 +1,29 @@
 from django.db import models
+from django.db import models
+from django.contrib.auth.models import User,AbstractUser,Group,Permission,BaseUserManager
+from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.utils import timezone
 
+# Create your models here.
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+        
 # -------------------- PRODUCT --------------------
-class Product(models.Model):
+class Product(BaseModel):
     photo = models.ImageField(upload_to="products/", blank=True, null=True)
     name = models.CharField(max_length=200)
+    company_name = models.CharField(max_length=200, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
     
-class ProductSize(models.Model):
+class ProductSize(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sizes")
     size = models.CharField(max_length=50, blank=True, null=True)
     code = models.CharField(max_length=50, blank=True, null=True)
@@ -31,7 +46,7 @@ PAYMENT_TYPE_CHOICES = [
 
 
 # -------------------- PRODUCT PRICE --------------------
-class ProductPrice(models.Model):
+class ProductPrice(BaseModel):
     product_size = models.ForeignKey(ProductSize, on_delete=models.CASCADE, related_name="prices",null=True,blank=True)
     payment_type = models.CharField(max_length=20, choices=PAYMENT_TYPE_CHOICES)
 
@@ -58,7 +73,7 @@ class ProductPrice(models.Model):
 
 
 # -------------------- DEALER --------------------
-class Dealer(models.Model):
+class Dealer(BaseModel):
     product_price = models.ForeignKey(ProductPrice, on_delete=models.CASCADE, related_name="dealers")
 
     # --- Dealer Info ---
@@ -87,19 +102,6 @@ class Dealer(models.Model):
         subtotal = self.purchase_price - (self.purchase_price * self.purchase_discount / 100)
         return subtotal + (subtotal * self.purchase_tax / 100)
     
-from django.db import models
-from django.contrib.auth.models import User,AbstractUser,Group,Permission,BaseUserManager
-from django.contrib.auth.models import BaseUserManager
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.utils import timezone
-
-# Create your models here.
-class BaseModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
 
 class AccountManager(BaseUserManager):
     use_in_migrations = True
