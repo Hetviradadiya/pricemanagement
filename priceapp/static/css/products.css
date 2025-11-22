@@ -7,7 +7,7 @@
 }
 #addProductBtn:hover, #addProductBtnMobile:hover {
   background: #212529;
-  color: #fff;
+  /* color: #fff; */
   border-color: #212529;
   box-shadow: 0 2px 8px rgba(33,37,41,0.08);
 }
@@ -15,6 +15,10 @@
         background-color: #f8f9fa;
         font-size: 14px;
       }
+
+  .form-control{
+    font-size: 12px;
+  }
       
       /* Mobile-first responsive design */
       .container {
@@ -197,11 +201,11 @@
       
       /* Better touch targets for mobile */
       @media (hover: none) and (pointer: coarse) {
-        button, 
+        /* button, 
         input, 
         select {
           min-height: 32px;
-        }
+        } */
         
         .btn-sm {
           min-height: 28px;
@@ -282,3 +286,70 @@
         font-size: 14px;
         vertical-align: middle;
         }
+
+      /* Save/Cancel buttons equal spacing */
+      #saveProductsBtn, #cancelEditBtn {
+        flex: 1 !important;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin: 0 !important;
+        border-radius: 6px;
+      }
+
+      /* Update Product button - Success style */
+      #saveProductsBtn {
+        background-color: #198754 !important;
+        border-color: #198754 !important;
+        color: white !important;
+      }
+
+      #saveProductsBtn:hover {
+        background-color: #157347 !important;
+        border-color: #146c43 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(25, 135, 84, 0.3);
+      }
+
+      /* Cancel Edit button - Secondary style */
+      #cancelEditBtn {
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        color: white !important;
+      }
+
+      #cancelEditBtn:hover {
+        background-color: #5c636a !important;
+        border-color: #565e64 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+      }
+
+      /* Container for buttons - ensure equal spacing */
+      .row .col-12 .d-flex.gap-2 {
+        gap: 12px !important;
+      }
+
+      /* Mobile responsiveness for save/cancel buttons */
+      @media (max-width: 768px) {
+        #saveProductsBtn, #cancelEditBtn {
+          font-size: 13px;
+          padding: 8px 12px;
+          min-height: 40px;
+        }
+        
+        .row .col-12 .d-flex.gap-2 {
+          gap: 8px !important;
+        }
+      }
+
+      @media (max-width: 480px) {
+        #saveProductsBtn, #cancelEditBtn {
+          font-size: 12px;
+          padding: 6px 8px;
+          min-height: 36px;
+        }
+      }

@@ -36,8 +36,9 @@ let productCount = 0;
         // Split search term into words for flexible matching
         const searchWords = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
         const filtered = allProducts.filter(product => {
-          // Search in product name
-          const nameMatch = searchWords.every(word => product.name?.toLowerCase().includes(word));
+          // Search in product name, company name, and description
+          const productFields = [product.name, product.company_name, product.description].map(f => (f || '').toLowerCase()).join(' ');
+          const productMatch = searchWords.every(word => productFields.includes(word));
 
           // Search in sizes (match all words in any order)
           const sizeMatch = product.sizes?.some(size => {
@@ -55,7 +56,7 @@ let productCount = 0;
             )
           );
           
-          return nameMatch || sizeMatch || dealerMatch;
+          return productMatch || sizeMatch || dealerMatch;
         });
         
         console.log(`✅ Found ${filtered.length} matching products`);
@@ -299,7 +300,7 @@ let productCount = 0;
         );
 
         dealerRow.innerHTML = `
-        <td colspan="13"></td>
+        <td colspan="15"></td>
         <td>${createInput("text", "", "form-control", 'placeholder="Dealer"')}</td>
         <td>${createInput("text", "", "form-control", 'placeholder="SLOL"')}</td>
         <td>${createInput("date", "", "form-control", 'onclick="this.showPicker();"')}</td>
@@ -353,7 +354,7 @@ let productCount = 0;
         priceRow.dataset.priceId = priceId;
 
         priceRow.innerHTML = `
-        <td colspan="6"></td>
+        <td colspan="8"></td>
         <td>
           <select class="form-control">
             <option value="">Select Payment Type</option>
@@ -423,7 +424,7 @@ let productCount = 0;
         sizeRow.classList.add(`product_${productId}_size`);
         sizeRow.dataset.sizeId = sizeId;
         sizeRow.innerHTML = `
-          <td colspan="2"></td>
+          <td colspan="4"></td>
           <td>${createInput("text", "", "form-control", 'placeholder="Size"')}</td>
           <td>${createInput("text", "", "form-control", 'placeholder="Code"')}</td>
           <td>${createInput("text", "", "form-control", 'placeholder="HSN"')}</td>
@@ -469,7 +470,9 @@ let productCount = 0;
             </div>
           </div>
         </td>
-        <td>${createInput("text")}</td>
+        <td>${createInput("text", "", "form-control", 'placeholder="Product Name"')}</td>
+        <td>${createInput("text", "", "form-control", 'placeholder="Company Name"')}</td>
+        <td>${createInput("text", "", "form-control", 'placeholder="Description"')}</td>
         <td colspan="21">
           <button class="btn btn-sm btn-success" onclick="addSizeRow(${productId})">+ Size</button>
           <button class="btn btn-sm btn-secondary" onclick="removeProductRow(this, ${productId})">✖ Del</button>
@@ -637,6 +640,8 @@ let productCount = 0;
             // Create Product data
             const productData = {
               name: productInputs[1]?.value || "",
+              company_name: productInputs[2]?.value || "",
+              description: productInputs[3]?.value || "",
               sizes: []
             };
             
@@ -1099,7 +1104,7 @@ let productCount = 0;
         if (data.length === 0) {
           const noResultsRow = document.createElement("tr");
           noResultsRow.innerHTML = `
-            <td colspan="23" class="text-center text-muted py-4">
+            <td colspan="25" class="text-center text-muted py-4">
               <div>🔍 No products found</div>
               <small>Try adjusting your search terms</small>
             </td>
@@ -1155,6 +1160,8 @@ let productCount = 0;
                           tr.innerHTML = `
                             ${firstProductRow ? `<td rowspan="${totalRows}">${product.photo ? `<img src="${product.photo}" alt="${product.name || 'Product'}" width="50" class="product-image" onclick="openImageModal('${product.photo}', '${product.name || 'Product Image'}')" title="Click to view full size">` : ""}</td>` : ""}
                             ${firstProductRow ? `<td rowspan="${totalRows}">${product.name || ""}</td>` : ""}
+                            ${firstProductRow ? `<td rowspan="${totalRows}">${product.company_name || ""}</td>` : ""}
+                            ${firstProductRow ? `<td rowspan="${totalRows}"><div style="max-width: 150px; max-height: 40px; overflow: hidden; text-overflow: ellipsis; font-size: 11px;" title="${product.description || ''}">${product.description || ""}</div></td>` : ""}
                             ${firstSizeRow ? `<td rowspan="${sizeRowsCount}">${size.size || ""}</td>` : ""}
                             ${firstSizeRow ? `<td rowspan="${sizeRowsCount}">${size.code || ""}</td>` : ""}
                             ${firstSizeRow ? `<td rowspan="${sizeRowsCount}">${size.hsn || ""}</td>` : ""}
@@ -1190,6 +1197,8 @@ let productCount = 0;
                         tr.innerHTML = `
                           ${firstProductRow ? `<td rowspan="${totalRows}">${product.photo ? `<img src="${product.photo}" alt="${product.name || 'Product'}" width="50" class="product-image" onclick="openImageModal('${product.photo}', '${product.name || 'Product Image'}')" title="Click to view full size">` : ""}</td>` : ""}
                           ${firstProductRow ? `<td rowspan="${totalRows}">${product.name || ""}</td>` : ""}
+                          ${firstProductRow ? `<td rowspan="${totalRows}">${product.company_name || ""}</td>` : ""}
+                          ${firstProductRow ? `<td rowspan="${totalRows}"><div style="max-width: 150px; max-height: 40px; overflow: hidden; text-overflow: ellipsis; font-size: 11px;" title="${product.description || ''}">${product.description || ""}</div></td>` : ""}
                           ${firstSizeRow ? `<td rowspan="${sizeRowsCount}">${size.size || ""}</td>` : ""}
                           ${firstSizeRow ? `<td rowspan="${sizeRowsCount}">${size.code || ""}</td>` : ""}
                           ${firstSizeRow ? `<td rowspan="${sizeRowsCount}">${size.hsn || ""}</td>` : ""}
@@ -1218,6 +1227,8 @@ let productCount = 0;
                     tr.innerHTML = `
                       ${firstProductRow ? `<td rowspan="${totalRows}">${product.photo ? `<img src="${product.photo}" alt="${product.name || 'Product'}" width="50" class="product-image" onclick="openImageModal('${product.photo}', '${product.name || 'Product Image'}')" title="Click to view full size">` : ""}</td>` : ""}
                       ${firstProductRow ? `<td rowspan="${totalRows}">${product.name || ""}</td>` : ""}
+                      ${firstProductRow ? `<td rowspan="${totalRows}">${product.company_name || ""}</td>` : ""}
+                      ${firstProductRow ? `<td rowspan="${totalRows}"><div style="max-width: 150px; max-height: 40px; overflow: hidden; text-overflow: ellipsis; font-size: 11px;" title="${product.description || ''}">${product.description || ""}</div></td>` : ""}
                       <td>${size.size || ""}</td>
                       <td>${size.code || ""}</td>
                       <td>${size.hsn || ""}</td>
@@ -1238,6 +1249,8 @@ let productCount = 0;
                 tr.innerHTML = `
                   <td>${product.photo ? `<img src="${product.photo}" alt="${product.name || 'Product'}" width="50" class="product-image" onclick="openImageModal('${product.photo}', '${product.name || 'Product Image'}')" title="Click to view full size">` : ""}</td>
                   <td>${product.name || ""}</td>
+                  <td>${product.company_name || ""}</td>
+                  <td><div style="max-width: 150px; max-height: 40px; overflow: hidden; text-overflow: ellipsis; font-size: 11px;" title="${product.description || ''}">${product.description || ""}</div></td>
                   <td colspan="20">No sizes defined</td>
                   <td>
                     <button class="btn btn-sm btn-success" onclick="editProduct(${product.id})" title="Edit Product">✎</button>
@@ -1324,6 +1337,8 @@ let productCount = 0;
               }
             }
             inputs[1].value = product.name || '';   // Name input
+            inputs[2].value = product.company_name || '';   // Company name input
+            inputs[3].value = product.description || '';   // Description input
           }
         }
         

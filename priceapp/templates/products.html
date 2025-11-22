@@ -186,7 +186,7 @@
                 type="text" 
                 id="searchBox" 
                 class="search-box w-100" 
-                placeholder="Search products by name, size, code, HSN, or dealer..." 
+                placeholder="Search products by name, company, description, size, code, HSN, or dealer..." 
                 oninput="searchProducts(this.value)"
                 style="height:44px;"
               >
@@ -299,12 +299,14 @@
         <table
           class="table table-bordered table-hover align-middle"
           id="productTable"
-          style="min-width: 1200px;"
+          style="min-width: 1400px;"
         >
           <thead class="table-light" style="position: sticky; top: 0; z-index: 2; background: #f8f9fa;">
             <tr>
               <th class="photo-column" style="position: sticky; top: 0; background: #f8f9fa;">Image</th>
               <th style="position: sticky; top: 0; background: #f8f9fa;">Name</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Company</th>
+              <th style="position: sticky; top: 0; background: #f8f9fa;">Description</th>
               <th style="position: sticky; top: 0; background: #f8f9fa;">Size</th>
               <th style="position: sticky; top: 0; background: #f8f9fa;">Code</th>
               <th style="position: sticky; top: 0; background: #f8f9fa;">HSN</th>
