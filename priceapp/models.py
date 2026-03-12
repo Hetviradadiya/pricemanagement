@@ -18,6 +18,7 @@ class Product(BaseModel):
     photo = models.ImageField(upload_to="products/", blank=True, null=True)
     name = models.CharField(max_length=200)
     company_name = models.CharField(max_length=200, blank=True, null=True)
+    vp_name = models.CharField(max_length=200, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
     def __str__(self):
