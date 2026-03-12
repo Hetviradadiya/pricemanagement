@@ -6,8 +6,6 @@ let allProducts = []; // Store all products for search functionality
 
 // Search functionality
 function searchProducts(searchTerm) {
-  console.log(`🔍 Searching for: "${searchTerm}"`);
-
   const clearBtn = document.getElementById("clearSearchBtn");
   const clearBtnMobile = document.getElementById("clearSearchBtnMobile");
 
@@ -37,8 +35,8 @@ function searchProducts(searchTerm) {
   // Split search term into words for flexible matching
   const searchWords = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
   const filtered = allProducts.filter((product) => {
-    // Search in product name, company name, and description
     const productFields = [
+      product.vp_name,
       product.name,
       product.company_name,
       product.description,
@@ -72,7 +70,6 @@ function searchProducts(searchTerm) {
     return productMatch || sizeMatch || dealerMatch;
   });
 
-  console.log(`✅ Found ${filtered.length} matching products`);
   displayFilteredProducts(filtered);
 
   // Show search results summary
@@ -91,12 +88,8 @@ function searchProducts(searchTerm) {
   }
 }
 
-// Logout functionality
 function logout() {
-  console.log("🚪 Logging out...");
-
   if (confirm("Are you sure you want to logout?")) {
-    // Clear any unsaved data
     if (
       document.querySelectorAll('#productList tr[id^="product_"]').length > 0
     ) {
@@ -108,9 +101,6 @@ function logout() {
         return;
       }
     }
-
-    // Redirect to login page
-    console.log("👋 Redirecting to login page...");
     window.location.href = "/login/";
   }
 }
@@ -138,7 +128,6 @@ function clearSearch() {
 
   // Show all products
   displayFilteredProducts(allProducts);
-  console.log("🔍 Search cleared - showing all products");
 }
 
 function createInput(
@@ -181,7 +170,6 @@ function previewPhoto(input) {
     reader.onload = function (e) {
       previewImg.src = e.target.result;
       previewDiv.style.display = "block";
-      console.log(`📷 New photo preview loaded: ${file.name}`);
 
       // Dim existing photo preview if in edit mode
       const existingPreview = input.parentElement.querySelector(
@@ -293,7 +281,6 @@ function removeCurrentPhoto(button) {
 
     // Mark for removal by adding a special attribute
     existingPreview.setAttribute("data-remove-photo", "true");
-    console.log("📷 Current photo marked for removal");
   }
 }
 
@@ -322,7 +309,6 @@ function undoRemovePhoto(button) {
 
         // Remove the removal marker
         existingPreview.removeAttribute("data-remove-photo");
-        console.log("📷 Photo removal undone");
       }
     })
     .catch((err) => console.error("Error restoring photo preview:", err));
@@ -336,7 +322,7 @@ function addDealerRow(priceRow, productId, sizeId, priceId) {
   );
 
   dealerRow.innerHTML = `
-        <td colspan="15"></td>
+        <td colspan="16"></td>
         <td>${createInput(
           "text",
           "",
@@ -445,7 +431,7 @@ function addPriceRow(productId, sizeId) {
   priceRow.dataset.priceId = priceId;
 
   priceRow.innerHTML = `
-        <td colspan="8"></td>
+        <td colspan="9"></td>
         <td>
           <select class="form-control">
             <option value="">Select Payment Type</option>
@@ -565,7 +551,7 @@ function addSizeRow(productId) {
   sizeRow.classList.add(`product_${productId}_size`);
   sizeRow.dataset.sizeId = sizeId;
   sizeRow.innerHTML = `
-          <td colspan="4"></td>
+          <td colspan="5"></td>
           <td>${createInput(
             "text",
             "",
@@ -640,6 +626,12 @@ function addProductRow() {
           "text",
           "",
           "form-control",
+          'placeholder="Company Name"'
+        )}</td>
+        <td>${createInput(
+          "text",
+          "",
+          "form-control",
           'placeholder="Description"'
         )}</td>
         <td>
@@ -689,11 +681,11 @@ function addProductRow() {
     } else {
       scroller.scrollTo({ top: scrollTop + offset, behavior: "smooth" });
     }
-    // Focus the VP Name (company name) input — first cell, first input
-    const companyInput = productRow
+    // Focus the VP Name (VP name) input — first cell, first input
+    const VPInput = productRow
       .querySelectorAll("td")[0]
       ?.querySelector("input");
-    if (companyInput) companyInput.focus();
+    if (VPInput) VPInput.focus();
   }, 100);
 }
 
@@ -721,29 +713,11 @@ function updatePriceCalc(element) {
   // Show final price after discount in the small field under discount %
   if (discountPriceInput) {
     discountPriceInput.value = priceAfterDiscount.toFixed(2);
-    console.log(
-      `✅ Discount calculation: ${price} - ${discountPercent}% = ₹${priceAfterDiscount.toFixed(
-        2
-      )}`
-    );
   }
   // Show final price after tax in the small field under tax %
   if (taxPriceInput) {
     taxPriceInput.value = finalTotal.toFixed(2);
-    console.log(
-      `✅ Tax calculation: ₹${priceAfterDiscount.toFixed(
-        2
-      )} + ${taxPercent}% tax = ₹${finalTotal.toFixed(2)}`
-    );
   }
-
-  console.log(
-    `🔍 Full calculation: Price: ${price}, Discount: ${discountPercent}% (₹${discountAmount}), Final after discount: ₹${priceAfterDiscount.toFixed(
-      2
-    )}, Tax: ${taxPercent}% (₹${taxAmount}), Final total: ₹${finalTotal.toFixed(
-      2
-    )}`
-  );
 
   // Box calculations
   const boxQtyInput = cells[5]?.querySelector("input"); // Box quantity column
@@ -802,20 +776,10 @@ function updateDealerCalc(element) {
   // Show final price after discount in the small field under discount %
   if (dealerDiscountPriceInput) {
     dealerDiscountPriceInput.value = purchasePriceAfterDiscount.toFixed(2);
-    console.log(
-      `✅ Dealer Discount: ${purchasePrice} - ${purchaseDiscountPercent}% = ₹${purchasePriceAfterDiscount.toFixed(
-        2
-      )}`
-    );
   }
   // Show final price after tax in the small field under tax %
   if (dealerTaxPriceInput) {
     dealerTaxPriceInput.value = purchaseFinalTotal.toFixed(2);
-    console.log(
-      `✅ Dealer Tax: ₹${purchasePriceAfterDiscount.toFixed(
-        2
-      )} + ${purchaseTaxPercent}% tax = ₹${purchaseFinalTotal.toFixed(2)}`
-    );
   }
 
   // Purchase box calculations
@@ -872,42 +836,28 @@ document.getElementById("saveProductsBtn").addEventListener("click", () => {
 
     // Create Product data
     const productData = {
-      name: productInputs[0]?.value || "",
-      company_name: productInputs[1]?.value || "",
-      description: productInputs[2]?.value || "",
+      vp_name: productInputs[0]?.value || "",
+      name: productInputs[1]?.value || "",
+      company_name: productInputs[2]?.value || "",
+      description: productInputs[3]?.value || "",
       sizes: [],
     };
 
     // Handle photo based on current state
-    const photoFile = productInputs[3]?.files?.[0];
-    const photoCell = productInputs[3]?.closest("td");
+    const photoFile = productInputs[4]?.files?.[0];
+    const photoCell = productInputs[4]?.closest("td");
     const existingPreview = photoCell?.querySelector(".existing-photo-preview");
     const isMarkedForRemoval =
       existingPreview?.getAttribute("data-remove-photo") === "true";
 
     if (photoFile) {
-      // New photo selected
       productData.photo = photoFile;
-      console.log(
-        `📷 New photo detected: ${photoFile.name}, Size: ${photoFile.size} bytes, Type: ${photoFile.type}`
-      );
     } else if (isMarkedForRemoval) {
-      // Photo marked for removal
       productData.removePhoto = true;
-      console.log(
-        `📷 Photo marked for removal for product: ${productData.name}`
-      );
     } else {
       // No change to photo
       console.log(`📷 No photo change for product: ${productData.name}`);
     }
-
-    // Debug: Log the current state
-    console.log(
-      `📷 Photo collection debug - File: ${!!photoFile}, Marked for removal: ${isMarkedForRemoval}, Has photo field: ${
-        "photo" in productData
-      }, Has removePhoto flag: ${!!productData.removePhoto}`
-    );
 
     if (productData.photo && typeof productData.photo !== "object") {
       console.error(
@@ -951,10 +901,6 @@ document.getElementById("saveProductsBtn").addEventListener("click", () => {
           dealers: [],
         };
 
-        console.log(
-          `💾 Saving price data: Price=${priceData.price}, Discount=${priceData.discount}%, Discount_Price=₹${priceData.discount_price}, Tax=${priceData.tax}%, Tax_Price=₹${priceData.tax_price}`
-        );
-
         // Get dealer rows for this price
         const dealerRows = document.querySelectorAll(
           `.product_${productId}_size_${sizeId}_price_${priceId}_dealer`
@@ -990,23 +936,6 @@ document.getElementById("saveProductsBtn").addEventListener("click", () => {
     data.push(productData);
   });
 
-  console.log("✅ Final Data:", JSON.stringify(data, null, 2));
-
-  // Debug: Check if sizes are being collected
-  data.forEach((product, index) => {
-    console.log(`🔍 Product ${index + 1}: ${product.name}`);
-    console.log(`📦 Sizes count: ${product.sizes ? product.sizes.length : 0}`);
-    if (product.sizes && product.sizes.length > 0) {
-      product.sizes.forEach((size, sIndex) => {
-        console.log(
-          `📏 Size ${sIndex + 1}: ${size.size}, Prices: ${
-            size.prices ? size.prices.length : 0
-          }`
-        );
-      });
-    }
-  });
-
   // Check if we're in edit mode
   if (editingProductId) {
     // Update mode - send PUT request for single product
@@ -1025,8 +954,6 @@ async function saveAllProducts(data) {
   let successCount = 0;
   let errorCount = 0;
   const totalProducts = data.length;
-
-  console.log(`💾 Starting to save ${totalProducts} products...`);
 
   // Show loading state
   const saveBtn = document.getElementById("saveProductsBtn");
@@ -1049,22 +976,12 @@ async function saveAllProducts(data) {
           delete productData.removePhoto;
         }
 
-        // Debug: Log the final photo value being sent for creation
-        if ("photo" in productData) {
-          console.log(
-            `📷 Final photo value for creation - type: ${typeof productData.photo}`
-          );
-        } else {
-          console.log(`📷 Photo field not included in creation data`);
-        }
-
         // Use FormData for file upload with proper nested data handling
         const formData = new FormData();
 
         // Handle photo file separately
         if (productData.photo instanceof File) {
           formData.append("photo", productData.photo);
-          console.log(`📷 Added photo file: ${productData.photo.name}`);
         }
 
         // Handle other fields - serialize nested objects as JSON strings
@@ -1073,24 +990,10 @@ async function saveAllProducts(data) {
             if (typeof productData[key] === "object") {
               const jsonData = JSON.stringify(productData[key]);
               formData.append(key, jsonData);
-              console.log(
-                `📦 Added ${key} as JSON: ${jsonData.substring(0, 200)}${
-                  jsonData.length > 200 ? "..." : ""
-                }`
-              );
             } else {
               formData.append(key, productData[key]);
-              console.log(`📝 Added ${key}: ${productData[key]}`);
             }
           }
-        }
-
-        // Debug: Log all FormData entries
-        console.log(`📋 FormData contents:`);
-        for (let pair of formData.entries()) {
-          console.log(
-            `  ${pair[0]}: ${typeof pair[1] === "object" ? "[File]" : pair[1]}`
-          );
         }
 
         const response = await fetch("/api/product-create/", {
@@ -1104,16 +1007,13 @@ async function saveAllProducts(data) {
         const result = await response.json();
 
         if (response.ok) {
-          console.log(`✅ Product ${index + 1} saved successfully:`, result);
           successCount++;
           return result;
         } else {
-          console.error(`❌ Error saving product ${index + 1}:`, result);
           errorCount++;
           throw new Error(`Product ${index + 1}: ${JSON.stringify(result)}`);
         }
       } catch (err) {
-        console.error(`❌ Network error for product ${index + 1}:`, err);
         errorCount++;
         throw err;
       }
@@ -1124,9 +1024,6 @@ async function saveAllProducts(data) {
 
     // Show results and refresh
     if (successCount > 0) {
-      console.log(
-        `✅ Successfully saved ${successCount} out of ${totalProducts} products!`
-      );
 
       // Show brief success indication on button
       saveBtn.textContent = "✅ Saved!";
@@ -1145,7 +1042,6 @@ async function saveAllProducts(data) {
         // Refresh the product display
         displayProductsWithNestedStructure();
 
-        console.log(`🔄 Page refreshed to show new products`);
       }, 1000);
     }
 
@@ -1165,13 +1061,8 @@ async function saveAllProducts(data) {
 
 // Update product function
 async function updateProduct(productId, productData) {
-  console.log(`🔧 Updating product ID: ${productId}`);
-  console.log(`📝 Product data:`, productData);
-
   try {
     const url = `/api/product-create/${productId}/`;
-    console.log(`📡 Sending PATCH request to: ${url}`);
-
     // --- Base64/resize logic DISABLED for update ---
     // Use standard file upload for productData.photo (File object)
     if (productData.photo && productData.photo instanceof File) {
@@ -1181,13 +1072,6 @@ async function updateProduct(productId, productData) {
       delete productData.removePhoto;
     } else {
       delete productData.photo;
-    }
-
-    // Debug: Log the final photo value being sent
-    if ("photo" in productData) {
-      console.log(`📷 Final photo value type: ${typeof productData.photo}`);
-    } else {
-      console.log(`📷 Photo field not included in update data`);
     }
 
     // Use FormData for file upload with proper nested data handling
@@ -1219,19 +1103,10 @@ async function updateProduct(productId, productData) {
       body: formData,
     });
 
-    console.log(`📡 Response status: ${response.status}`);
-    console.log(`📡 Response headers:`, response.headers);
-
     const result = await response.json();
-    console.log(`📋 Response data:`, result);
 
     if (response.ok) {
-      console.log(`✅ Product updated successfully!`);
-
-      // Reset edit mode UI
       cancelEdit();
-
-      // Reload the product list
       window.location.reload();
     } else {
       console.error(`❌ Error response status: ${response.status}`);
@@ -1253,7 +1128,6 @@ function cancelEdit() {
   productCount = 0;
   sizeCount = 0;
   priceCount = 0;
-  console.log("✅ Edit mode cancelled");
 
   // Hide save button when clearing form
   toggleSaveButtonVisibility();
@@ -1264,8 +1138,6 @@ function cancelEdit() {
 
 // Delete product function
 async function deleteProduct(productId) {
-  console.log(`🗑️ Attempting to delete product ID: ${productId}`);
-
   // Get product name for better confirmation message
   let productName = "this product";
   try {
@@ -1289,7 +1161,6 @@ async function deleteProduct(productId) {
       `Are you sure you want to delete ${productName}?\n\nThis action cannot be undone and will remove all associated sizes, prices, and dealer information.`
     )
   ) {
-    console.log("❌ Delete cancelled by user");
     return;
   }
 
@@ -1304,23 +1175,15 @@ async function deleteProduct(productId) {
 
   try {
     const url = `/api/product-create/${productId}/`;
-    console.log(`📡 Sending DELETE request to: ${url}`);
-
     const response = await fetch(url, {
       method: "DELETE",
       headers: {
         "X-CSRFToken": getCookie("csrftoken"),
       },
     });
-
-    console.log(`📡 Delete response status: ${response.status}`);
-
     if (response.ok) {
-      console.log("✅ Product deleted successfully!");
-
       // Refresh the product display instead of full page reload
       displayProductsWithNestedStructure();
-      console.log("🔄 Product list refreshed after deletion");
     } else {
       const result = await response.json();
       console.error(`❌ Error deleting product (${response.status}):`, result);
@@ -1365,8 +1228,6 @@ function displayProductsWithNestedStructure() {
     .then((data) => {
       // Store all products globally for search functionality
       allProducts = data;
-      console.log(`📦 Loaded ${allProducts.length} products for search`);
-
       // Display all products initially
       displayFilteredProducts(data);
     })
@@ -1444,13 +1305,20 @@ function displayFilteredProducts(data) {
                 ${
                   firstProductRow
                     ? `<td rowspan="${totalRows}">${
-                        product.company_name || ""
+                        product.vp_name || ""
                       }</td>`
                     : ""
                 }
                 ${
                   firstProductRow
                     ? `<td rowspan="${totalRows}">${product.name || ""}</td>`
+                    : ""
+                }
+                ${
+                  firstProductRow
+                    ? `<td rowspan="${totalRows}">${
+                        product.company_name || ""
+                      }</td>`
                     : ""
                 }
                 ${
@@ -1605,15 +1473,7 @@ function displayFilteredProducts(data) {
                           ${
                             firstProductRow
                               ? `<td rowspan="${totalRows}">${
-                                  product.photo
-                                    ? `<img src="${product.photo}" alt="${
-                                        product.name || "Product"
-                                      }" width="50" class="product-image" onclick="openImageModal('${
-                                        product.photo
-                                      }', '${
-                                        product.name || "Product Image"
-                                      }')" title="Click to view full size">`
-                                    : ""
+                                  product.vp_name || ""
                                 }</td>`
                               : ""
                           }
@@ -1636,6 +1496,21 @@ function displayFilteredProducts(data) {
                               ? `<td rowspan="${totalRows}"><div style="max-width: 150px; max-height: 40px; overflow: hidden; text-overflow: ellipsis; font-size: 11px;" title="${
                                   product.description || ""
                                 }">${product.description || ""}</div></td>`
+                              : ""
+                          }
+                          ${
+                            firstProductRow
+                              ? `<td rowspan="${totalRows}">${
+                                  product.photo
+                                    ? `<img src="${product.photo}" alt="${
+                                        product.name || "Product"
+                                      }" width="50" class="product-image" onclick="openImageModal('${
+                                        product.photo
+                                      }', '${
+                                        product.name || "Product Image"
+                                      }')" title="Click to view full size">`
+                                    : ""
+                                }</td>`
                               : ""
                           }
                           ${
@@ -1711,15 +1586,7 @@ function displayFilteredProducts(data) {
                       ${
                         firstProductRow
                           ? `<td rowspan="${totalRows}">${
-                              product.photo
-                                ? `<img src="${product.photo}" alt="${
-                                    product.name || "Product"
-                                  }" width="50" class="product-image" onclick="openImageModal('${
-                                    product.photo
-                                  }', '${
-                                    product.name || "Product Image"
-                                  }')" title="Click to view full size">`
-                                : ""
+                              product.vp_name || ""
                             }</td>`
                           : ""
                       }
@@ -1744,6 +1611,21 @@ function displayFilteredProducts(data) {
                             }">${product.description || ""}</div></td>`
                           : ""
                       }
+                      ${
+                        firstProductRow
+                          ? `<td rowspan="${totalRows}">${
+                              product.photo
+                                ? `<img src="${product.photo}" alt="${
+                                    product.name || "Product"
+                                  }" width="50" class="product-image" onclick="openImageModal('${
+                                    product.photo
+                                  }', '${
+                                    product.name || "Product Image"
+                                  }')" title="Click to view full size">`
+                                : ""
+                            }</td>`
+                          : ""
+                      }
                       <td>${size.size || ""}</td>
                       <td>${size.code || ""}</td>
                       <td>${size.hsn || ""}</td>
@@ -1766,8 +1648,9 @@ function displayFilteredProducts(data) {
       // Product with no sizes
       const tr = document.createElement("tr");
       tr.innerHTML = `
-      <td>${product.company_name || ""}</td>
+      <td>${product.vp_name || ""}</td>
       <td>${product.name || ""}</td>
+      <td>${product.company_name || ""}</td>
       <td><div style="max-width: 150px; max-height: 40px; overflow: hidden; text-overflow: ellipsis; font-size: 11px;" title="${
         product.description || ""
       }">${product.description || ""}</div></td>
@@ -1799,8 +1682,6 @@ function displayFilteredProducts(data) {
 
 // --- Edit Product Function ---
 function editProduct(productId) {
-  console.log(`🔧 Editing product ID: ${productId}`);
-
   // Fetch the specific product data
   fetch(`/api/product-create/`)
     .then((res) => res.json())
@@ -1840,9 +1721,6 @@ function populateFormWithProductData(product) {
   document.getElementById("cancelEditBtn").style =
     "display: block;font-size: 12px;";
 
-  // Show a message to user that they're in edit mode
-  console.log(`📝 Editing product: ${product.name} (ID: ${product.id})`);
-
   // Add product row first - this creates the basic structure
   addProductRow();
 
@@ -1851,15 +1729,15 @@ function populateFormWithProductData(product) {
     const inputs = productRow.querySelectorAll("input");
     // ---- NEW COLUMN ORDER: VP Name(0), Name(1), Description(2), Image/file(3) ----
     if (inputs.length >= 2) {
-      inputs[0].value = product.company_name || ""; // TD 0 = VP Name
+      inputs[0].value = product.vp_name || ""; // TD 0 = VP Name
       inputs[1].value = product.name || ""; // TD 1 = Name
       inputs[2].value = product.description || ""; // TD 2 = Description
+      inputs[3].value = product.company_name || "";
     }
 
     // Photo is now in TD 3 (Image column) — use querySelector for robustness
     if (product.photo) {
-      console.log(`📷 Current photo: ${product.photo}`);
-      const photoCell = inputs[3].parentElement;
+      const photoCell = inputs[4].parentElement;
       const existingPreview = photoCell.querySelector(
         ".existing-photo-preview"
       );
@@ -2035,8 +1913,6 @@ function populateFormWithProductData(product) {
       }
     });
   }
-
-  console.log("✅ Product loaded into form for editing");
 
   // Scroll to top of form so user can see the loaded data
   document
