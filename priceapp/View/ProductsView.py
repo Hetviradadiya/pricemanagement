@@ -1,4 +1,6 @@
 from rest_framework import viewsets, permissions, filters, status
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -8,26 +10,30 @@ from ..serializers import ProductSerializer, ProductPriceSerializer, DealerSeria
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.prefetch_related('prices__dealers', 'sizes').all().order_by('-id')
     serializer_class = ProductSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'sizes__size', 'sizes__code', 'sizes__hsn']
 
 class ProductPriceViewSet(viewsets.ModelViewSet):
     queryset = ProductPrice.objects.select_related('product').prefetch_related('dealers').all().order_by('-id')
     serializer_class = ProductPriceSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['product__name', 'payment_type']
 
 class DealerViewSet(viewsets.ModelViewSet):
     queryset = Dealer.objects.select_related('product_price', 'product_price__product').all().order_by('-id')
     serializer_class = DealerSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['dlr_name', 'slol', 'product_price__product__name']
 
 class BulkProductCreateAPIView(APIView):
-    # permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         products = Product.objects.prefetch_related('sizes__prices__dealers').all().order_by('-id')

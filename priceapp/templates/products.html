@@ -182,18 +182,18 @@
               <i class="fa fa-plus me-1"></i> Add Product
             </button>
             <div class="flex-grow-1 position-relative">
-              <input 
-                type="text" 
-                id="searchBox" 
-                class="search-box w-100" 
-                placeholder="Search products by name, company, description, size, code, HSN, or dealer..." 
+              <input
+                type="text"
+                id="searchBox"
+                class="search-box w-100"
+                placeholder="Search products by name, company, description, size, code, HSN, or dealer..."
                 oninput="searchProducts(this.value)"
                 style="height:44px;"
               >
-              <button 
-                id="clearSearchBtn" 
-                class="btn btn-sm btn-outline-secondary clear-search-btn" 
-                onclick="clearSearch()" 
+              <button
+                id="clearSearchBtn"
+                class="btn btn-sm btn-outline-secondary clear-search-btn"
+                onclick="clearSearch()"
                 style="position: absolute; right: 2px; top: 2px; height: 32px; width: 32px; display: none; z-index: 10; border: none; background: rgba(255,255,255,0.8); font-size: 14px; line-height: 1;"
                 title="Clear search"
               >
@@ -229,17 +229,17 @@
           <div class="row mb-2">
             <div class="col-12">
               <div class="position-relative w-100">
-                <input 
-                  type="text" 
-                  id="searchBoxMobile" 
-                  class="search-box w-100" 
-                  placeholder="Search products..." 
+                <input
+                  type="text"
+                  id="searchBoxMobile"
+                  class="search-box w-100"
+                  placeholder="Search products..."
                   oninput="searchProducts(this.value)"
                 >
-                <button 
-                  id="clearSearchBtnMobile" 
-                  class="btn btn-sm btn-outline-secondary clear-search-btn" 
-                  onclick="clearSearch()" 
+                <button
+                  id="clearSearchBtnMobile"
+                  class="btn btn-sm btn-outline-secondary clear-search-btn"
+                  onclick="clearSearch()"
                   style="position: absolute; right: 2px; top: 2px; height: 28px; width: 28px; display: none; z-index: 10; border: none; background: rgba(255,255,255,0.8); font-size: 12px; line-height: 1;"
                   title="Clear search"
                 >
@@ -266,34 +266,34 @@
           </button>
         </div>
       </div>
-    <script>
-      // Only assign addProductRow to the visible Add Product button and disable the hidden one
-      function setAddProductBtnHandler() {
+      <script>
+        // Only assign addProductRow to the visible Add Product button and disable the hidden one
+        function setAddProductBtnHandler() {
         var addBtn = document.getElementById('addProductBtn');
         var addBtnMobile = document.getElementById('addProductBtnMobile');
-        if (window.innerWidth >= 768) {
-          if (addBtn) {
-            addBtn.onclick = addProductRow;
-            addBtn.disabled = false;
-          }
-          if (addBtnMobile) {
-            addBtnMobile.onclick = null;
-            addBtnMobile.disabled = true;
-          }
-        } else {
-          if (addBtn) {
-            addBtn.onclick = null;
-            addBtn.disabled = true;
-          }
-          if (addBtnMobile) {
-            addBtnMobile.onclick = addProductRow;
-            addBtnMobile.disabled = false;
+          if (window.innerWidth >= 768) {
+            if (addBtn) {
+              addBtn.onclick = addProductRow;
+              addBtn.disabled = false;
+            }
+            if (addBtnMobile) {
+              addBtnMobile.onclick = null;
+              addBtnMobile.disabled = true;
+            }
+          } else {
+            if (addBtn) {
+              addBtn.onclick = null;
+              addBtn.disabled = true;
+            }
+            if (addBtnMobile) {
+              addBtnMobile.onclick = addProductRow;
+              addBtnMobile.disabled = false;
+            }
           }
         }
-      }
       document.addEventListener('DOMContentLoaded', setAddProductBtnHandler);
       window.addEventListener('resize', setAddProductBtnHandler);
-    </script>
+      </script>
 
       <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
         <table
@@ -362,6 +362,34 @@
 
     <script src="{% static 'js/products.js' %}"></script>
     <script>
+      // Override global logout to call API logout endpoint, clear tokens and redirect to login
+      async function logout() {
+        try {
+          const access = localStorage.getItem("accessToken");
+          const refresh = localStorage.getItem("refreshToken");
+          const headers = { "Content-Type": "application/json" };
+          if (access) headers["Authorization"] = "Bearer " + access;
+
+          // Call logout API. Include credentials in case session-based auth is used.
+          await fetch("/api/auth/logout/", {
+            method: "POST",
+            headers: headers,
+            credentials: "include",
+            body: JSON.stringify({ refresh: refresh }),
+          });
+        } catch (err) {
+          console.error("Logout API call failed:", err);
+        } finally {
+          // Clear stored tokens and session data on client
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("authToken");
+          // Redirect to login page
+          window.location.href = "/login/";
+        }
+      }
+    </script>
+    <script>
       let currentZoom = 1;
       let isDragging = false;
       let startX, startY, currentX = 0, currentY = 0;
@@ -370,17 +398,17 @@
         const modal = document.getElementById('imageModal');
         const modalImage = document.getElementById('modalImage');
         const imageContent = document.getElementById('imageModalContent');
-        
+
         modalImage.src = imageSrc;
         modalImage.alt = altText;
         modal.style.display = 'block';
-        
+
         // Reset zoom and position
         resetZoom();
-        
+
         // Prevent body scrolling when modal is open
         document.body.style.overflow = 'hidden';
-        
+
         // Add drag functionality
         setupImageDrag();
       }
@@ -391,7 +419,7 @@
             !event.target.closest('.image-modal-btn')) {
           return;
         }
-        
+
         const modal = document.getElementById('imageModal');
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
@@ -417,14 +445,14 @@
       function updateZoom() {
         const imageContent = document.getElementById('imageModalContent');
         const zoomLevel = document.getElementById('zoomLevel');
-        
+
         imageContent.style.transform = `translate(-50%, -50%) translate(${currentX}px, ${currentY}px) scale(${currentZoom})`;
         zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
       }
 
       function setupImageDrag() {
         const imageContent = document.getElementById('imageModalContent');
-        
+
         imageContent.onmousedown = function(e) {
           e.preventDefault();
           isDragging = true;
@@ -497,14 +525,14 @@
       // Mouse wheel zoom
       document.getElementById('imageModal').addEventListener('wheel', function(e) {
         if (document.getElementById('imageModal').style.display === 'block') {
-          e.preventDefault();
-          if (e.deltaY < 0) {
-            zoomIn();
-          } else {
-            zoomOut();
+            e.preventDefault();
+            if (e.deltaY < 0) {
+              zoomIn();
+            } else {
+              zoomOut();
+            }
           }
-        }
-      });
+        });
     </script>
   </body>
 </html>
