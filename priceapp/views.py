@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import TokenError
 from django.utils import timezone
 from .forms import LoginForm
 from .models import LoginRecord
@@ -50,11 +51,11 @@ class LoginAPIView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
         if not email or not password:
-            return Response({'detail': 'Email and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status' : False,'detail': 'Email and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(request, email=email, password=password)
         if user is None:
-            return Response({'detail': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'status' : False,'detail': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
         login(request, user)
 
@@ -70,8 +71,18 @@ class LoginAPIView(APIView):
             pass
 
         return Response({
+            'status' : True,
             'access': str(refresh.access_token),
             'refresh': str(refresh),
+
+            "user": {
+                "id": user.id,
+                "username" : user.username,
+                "name": user.full_name,
+                "email": user.email,
+                "phone": user.mobile,
+                "is_staff": user.is_staff,
+            }
         }, status=status.HTTP_200_OK)
 
 
@@ -80,17 +91,41 @@ class LogoutAPIView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-        refresh_token = request.data.get('refresh')
+        refresh_token = request.data.get('refresh') or request.COOKIES.get('refresh')
+
+        # Try to blacklist a single provided refresh token first
         if refresh_token:
             try:
                 token = RefreshToken(refresh_token)
-                # Blacklist the token if the blacklist app is enabled
                 token.blacklist()
-            except Exception as e:
-                # If blacklist not configured or token invalid, return a warning but still logout session
-                # We'll include the error message so client can act accordingly
                 logout(request)
-                return Response({'detail': 'Logged out (refresh token not blacklisted)', 'error': str(e)}, status=status.HTTP_200_OK)
+                return Response({'status' : True,'detail': 'Logged out and refresh token blacklisted'}, status=status.HTTP_200_OK)
+            except TokenError as te:
+                # Token is invalid/expired
+                logout(request)
+                return Response({'status' : False,'detail': 'Logged out (invalid refresh token)', 'error': str(te)}, status=status.HTTP_200_OK)
+            except Exception as e:
+                logout(request)
+                return Response({'status' : False,'detail': 'Logged out (error blacklisting refresh token)', 'error': str(e)}, status=status.HTTP_200_OK)
 
-        logout(request)
-        return Response({'detail': 'Logged out'}, status=status.HTTP_200_OK)
+        # If no specific refresh provided, attempt to blacklist all outstanding tokens for the user
+        try:
+            from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+
+            outstanding = OutstandingToken.objects.filter(user=request.user)
+            blacklisted_count = 0
+            for out in outstanding:
+                try:
+                    # Create BlacklistedToken for each OutstandingToken (idempotent via get_or_create)
+                    BlacklistedToken.objects.get_or_create(token=out)
+                    blacklisted_count += 1
+                except Exception:
+                    # ignore per-token errors
+                    pass
+
+            logout(request)
+            return Response({'status' : True,'detail': 'Logged out', 'blacklisted': blacklisted_count}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logout(request)
+            return Response({'status' : False,'detail': 'Logged out (error during blacklisting)', 'error': str(e)}, status=status.HTTP_200_OK)

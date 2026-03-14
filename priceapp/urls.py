@@ -1,4 +1,5 @@
 from django.urls import path,include
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from priceapp.View.ProductsView import ProductViewSet, ProductPriceViewSet, DealerViewSet, BulkProductCreateAPIView
 from priceapp.views import price_dashboard, LoginAPIView, LogoutAPIView, user_login, user_logout
@@ -17,6 +18,7 @@ urlpatterns = [
 
     path('api/auth/login/', LoginAPIView.as_view(), name='api_login'),
     path('api/auth/logout/', LogoutAPIView.as_view(), name='api_logout'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include(router.urls)),
     path('api/product-create/', BulkProductCreateAPIView.as_view(), name='bulk-products-create'),
     path('api/product-create/<int:pk>/', BulkProductCreateAPIView.as_view(), name='bulk-products-update'),
