@@ -14,6 +14,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from django.utils import timezone
 from .forms import LoginForm
 from .models import LoginRecord
+from .serializers import UserAccountSerializer, ChangePasswordSerializer
 
 # def user_login(request):
 def user_login(request):
@@ -80,7 +81,7 @@ class LoginAPIView(APIView):
                 "username" : user.username,
                 "name": user.full_name,
                 "email": user.email,
-                "phone": user.mobile,
+                "mobile": user.mobile,
                 "is_staff": user.is_staff,
             }
         }, status=status.HTTP_200_OK)
@@ -129,3 +130,57 @@ class LogoutAPIView(APIView):
         except Exception as e:
             logout(request)
             return Response({'status' : False,'detail': 'Logged out (error during blacklisting)', 'error': str(e)}, status=status.HTTP_200_OK)
+
+
+# -------------------- USER MANAGEMENT APIs --------------------
+class GetUserDetailsAPIView(APIView):
+    """Get current user details"""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserAccountSerializer(request.user)
+        return Response({
+            'status': True,
+            'user': serializer.data
+        }, status=status.HTTP_200_OK)
+
+
+class UpdateUserDetailsAPIView(APIView):
+    """Update current user details"""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request):
+        serializer = UserAccountSerializer(request.user, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'status': True,
+                'message': 'User details updated successfully',
+                'user': serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response({
+            'status': False,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordAPIView(APIView):
+    """Change user password"""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'status': True,
+                'message': 'Password changed successfully'
+            }, status=status.HTTP_200_OK)
+        return Response({
+            'status': False,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    

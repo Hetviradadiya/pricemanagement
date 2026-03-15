@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, ProductPrice, Dealer, ProductSize
+from .models import Product, ProductPrice, Dealer, ProductSize, UserAccount, Role
 # from drf_extra_fields.fields import Base64ImageField  # Commented out - using standard ImageField instead
 
 class DealerSerializer(serializers.ModelSerializer):
@@ -316,3 +316,55 @@ class ProductSerializer(serializers.ModelSerializer):
                 print(f"❌ Complete failure in update: {fallback_error}")
                 logger.error(f"Complete failure in update: {fallback_error}")
                 raise fallback_error
+
+
+# -------------------- USER ACCOUNT SERIALIZERS --------------------
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['id', 'name', 'description']
+
+
+class UserAccountSerializer(serializers.ModelSerializer):
+    role_details = RoleSerializer(source='role', read_only=True)
+    
+    class Meta:
+        model = UserAccount
+        fields = [
+            'id', 'username', 'full_name', 'email', 'mobile',
+            'is_active', 'is_staff', 'is_superuser', 'date_joined',
+            'address_line', 'city', 'state', 'country', 'postal_code',
+            'role', 'role_details'
+        ]
+        read_only_fields = ['id', 'date_joined', 'is_superuser']
+        extra_kwargs = {
+            'email': {'required': False},
+            'is_staff': {'read_only': True},
+        }
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True, min_length=6)
+    confirm_password = serializers.CharField(required=True, write_only=True)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Old password is incorrect.")
+        return value
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "New passwords do not match."})
+        
+        if data['old_password'] == data['new_password']:
+            raise serializers.ValidationError({"new_password": "New password must be different from old password."})
+        
+        return data
+
+    def save(self, **kwargs):
+        user = self.context['request'].user
+        user.set_password(self.validated_data['new_password'])
+        user.save()
+        return user
