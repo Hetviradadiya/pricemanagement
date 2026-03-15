@@ -1,7 +1,8 @@
 import nested_admin
 from django.contrib import admin
-from .models import Product, ProductPrice, Dealer, ProductSize
+from .models import Product, ProductPrice, Dealer, ProductSize, UserAccount, Role, Module, LoginRecord
 from import_export.admin import ImportExportModelAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 # ----------------- Dealer Inline (Nested) -----------------
 class DealerInline(nested_admin.NestedTabularInline):
@@ -71,3 +72,63 @@ class ProductAdmin(nested_admin.NestedModelAdmin, ImportExportModelAdmin):
 
     class Media:
         css = {"all": ("admin/css/custom_admin.css",)}
+
+
+# ----------------- Role Admin -----------------
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "description", "created_at", "updated_at")
+    search_fields = ("name", "description")
+    list_filter = ("created_at",)
+
+
+# ----------------- Module Admin -----------------
+@admin.register(Module)
+class ModuleAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "description", "created_at", "updated_at")
+    search_fields = ("name", "description")
+    list_filter = ("created_at",)
+
+
+# ----------------- LoginRecord Admin -----------------
+@admin.register(LoginRecord)
+class LoginRecordAdmin(admin.ModelAdmin):
+    list_display = ("user", "ip_address", "login_time", "user_agent")
+    search_fields = ("user__full_name", "user__email", "ip_address")
+    list_filter = ("login_time",)
+    readonly_fields = ("user", "ip_address", "login_time", "user_agent")
+    date_hierarchy = "login_time"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+# ----------------- UserAccount Admin -----------------
+@admin.register(UserAccount)
+class UserAccountAdmin(BaseUserAdmin):
+    list_display = ("email", "full_name", "mobile", "role", "is_active", "is_staff", "is_superuser", "date_joined")
+    list_filter = ("is_active", "is_staff", "is_superuser", "role", "date_joined")
+    search_fields = ("email", "full_name", "mobile", "username")
+    ordering = ("-date_joined",)
+    
+    fieldsets = (
+        (None, {"fields": ("email", "password")}),
+        ("Personal Info", {"fields": ("username", "full_name", "mobile")}),
+        ("Address", {"fields": ("address_line", "city", "state", "country", "postal_code")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "role", "groups", "user_permissions")}),
+        ("Important Dates", {"fields": ("date_joined", "last_login")}),
+        ("Metadata", {"fields": ("created_by",)}),
+    )
+    
+    add_fieldsets = (
+        (None, {
+            "classes": ("wide",),
+            "fields": ("email", "full_name", "mobile", "password1", "password2", "role", "is_staff", "is_active"),
+        }),
+    )
+    
+    readonly_fields = ("date_joined", "last_login")
+    filter_horizontal = ("groups", "user_permissions")

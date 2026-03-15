@@ -3,8 +3,10 @@ let priceCount = 0;
 let sizeCount = 0;
 let editingProductId = null;
 let allProducts = []; // Store all products for search functionality
+let currentSearchTerm = ""; // Track current search term
+let searchTimeout = null; // For debouncing search requests
 
-// Search functionality
+// Debounced search function to avoid too many API calls
 function searchProducts(searchTerm) {
   const clearBtn = document.getElementById("clearSearchBtn");
   const clearBtnMobile = document.getElementById("clearSearchBtnMobile");
@@ -16,15 +18,25 @@ function searchProducts(searchTerm) {
   if (searchBoxMobile && searchBoxMobile.value !== searchTerm)
     searchBoxMobile.value = searchTerm;
 
+  // Store current search term
+  currentSearchTerm = searchTerm;
+
+  // Clear previous timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+
   if (!searchTerm.trim()) {
-    // If search is empty, show all products and hide clear buttons
-    displayFilteredProducts(allProducts);
+    // If search is empty, load all products immediately
     if (clearBtn) clearBtn.style.display = "none";
     if (clearBtnMobile) clearBtnMobile.style.display = "none";
 
     // Hide search summary
     const searchSummary = document.getElementById("searchSummary");
     if (searchSummary) searchSummary.style.display = "none";
+    
+    // Load all products from backend
+    loadProductsFromBackend();
     return;
   }
 
@@ -32,60 +44,10 @@ function searchProducts(searchTerm) {
   if (clearBtn) clearBtn.style.display = "block";
   if (clearBtnMobile) clearBtnMobile.style.display = "block";
 
-  // Split search term into words for flexible matching
-  const searchWords = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
-  const filtered = allProducts.filter((product) => {
-    const productFields = [
-      product.vp_name,
-      product.name,
-      product.company_name,
-      product.description,
-    ]
-      .map((f) => (f || "").toLowerCase())
-      .join(" ");
-    const productMatch = searchWords.every((word) =>
-      productFields.includes(word)
-    );
-
-    // Search in sizes (match all words in any order)
-    const sizeMatch = product.sizes?.some((size) => {
-      const sizeFields = [size.size, size.code, size.hsn]
-        .map((f) => (f || "").toLowerCase())
-        .join(" ");
-      return searchWords.every((word) => sizeFields.includes(word));
-    });
-
-    // Search in dealers (match all words in any order)
-    const dealerMatch = product.sizes?.some((size) =>
-      size.prices?.some((price) =>
-        price.dealers?.some((dealer) => {
-          const dealerFields = [dealer.dlr_name, dealer.slol]
-            .map((f) => (f || "").toLowerCase())
-            .join(" ");
-          return searchWords.every((word) => dealerFields.includes(word));
-        })
-      )
-    );
-
-    return productMatch || sizeMatch || dealerMatch;
-  });
-
-  displayFilteredProducts(filtered);
-
-  // Show search results summary
-  const searchSummary = document.getElementById("searchSummary");
-  if (searchSummary) {
-    if (filtered.length === 0) {
-      searchSummary.textContent = `No results found for "${searchTerm}"`;
-      searchSummary.className = "text-muted small mb-2";
-    } else {
-      searchSummary.textContent = `Found ${filtered.length} product${
-        filtered.length === 1 ? "" : "s"
-      } matching "${searchTerm}"`;
-      searchSummary.className = "text-success small mb-2";
-    }
-    searchSummary.style.display = "block";
-  }
+  // Debounce the API call - wait 300ms after user stops typing
+  searchTimeout = setTimeout(() => {
+    loadProductsFromBackend(searchTerm);
+  }, 300);
 }
 
 function logout() {
@@ -126,8 +88,9 @@ function clearSearch() {
     searchSummary.style.display = "none";
   }
 
-  // Show all products
-  displayFilteredProducts(allProducts);
+  // Clear search term and reload all products from backend
+  currentSearchTerm = "";
+  loadProductsFromBackend();
 }
 
 function createInput(
@@ -1221,17 +1184,44 @@ function getCookie(name) {
 }
 // Removed old incorrect display function
 
-// Override the display function to handle nested structure correctly
-function displayProductsWithNestedStructure() {
-  fetch("/api/product-create/")
+// Load products from backend with optional search parameter
+function loadProductsFromBackend(searchTerm = "") {
+  let url = "/api/product-create/";
+  
+  // Add search query parameter if search term exists
+  if (searchTerm && searchTerm.trim()) {
+    url += `?search=${encodeURIComponent(searchTerm.trim())}`;
+  }
+
+  fetch(url)
     .then((res) => res.json())
     .then((data) => {
-      // Store all products globally for search functionality
+      // Store products globally
       allProducts = data;
-      // Display all products initially
+      // Display the products
       displayFilteredProducts(data);
+      
+      // Show search summary if searching
+      const searchSummary = document.getElementById("searchSummary");
+      if (searchSummary && searchTerm && searchTerm.trim()) {
+        if (data.length === 0) {
+          searchSummary.textContent = `No results found for "${searchTerm}"`;
+          searchSummary.className = "text-muted small mb-2";
+        } else {
+          searchSummary.textContent = `Found ${data.length} product${
+            data.length === 1 ? "" : "s"
+          } matching "${searchTerm}"`;
+          searchSummary.className = "text-success small mb-2";
+        }
+        searchSummary.style.display = "block";
+      }
     })
     .catch((err) => console.error("Error loading products:", err));
+}
+
+// Override the display function to handle nested structure correctly
+function displayProductsWithNestedStructure() {
+  loadProductsFromBackend(currentSearchTerm);
 }
 
 // Display filtered products (used by both main display and search)

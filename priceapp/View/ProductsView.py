@@ -4,6 +4,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from ..models import Product, ProductPrice, Dealer
 from ..serializers import ProductSerializer, ProductPriceSerializer, DealerSerializer
 
@@ -36,7 +37,25 @@ class BulkProductCreateAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        products = Product.objects.prefetch_related('sizes__prices__dealers').all().order_by('-id')
+        search = request.query_params.get('search', None)
+
+        products = Product.objects.prefetch_related('sizes__prices__dealers').all()
+
+        if search:
+            products = products.filter(
+                Q(name__icontains=search) |
+                Q(company_name__icontains=search) |
+                Q(vp_name__icontains=search) |
+                Q(description__icontains=search) |
+                Q(sizes__size__icontains=search) |
+                Q(sizes__code__icontains=search) |
+                Q(sizes__hsn__icontains=search) |
+                Q(sizes__prices__payment_type__icontains=search) |
+                Q(sizes__prices__dealers__dlr_name__icontains=search) |
+                Q(sizes__prices__dealers__slol__icontains=search)
+            ).distinct()
+        
+        products = products.order_by('-id')
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
