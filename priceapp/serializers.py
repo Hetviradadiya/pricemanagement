@@ -8,11 +8,23 @@ class DealerSerializer(serializers.ModelSerializer):
         exclude = ('product_price',)  # exclude FK, will set in create()
 
 class ProductPriceSerializer(serializers.ModelSerializer):
-    dealers = DealerSerializer(many=True)
+    price_date = serializers.DateField(required=False, allow_null=True)
+    purchase_date = serializers.DateField(required=False, allow_null=True)
+    dealers = DealerSerializer(many=True, required=False)
 
     class Meta:
         model = ProductPrice
         exclude = ('product_size',)  # exclude FK, will set in create()
+
+    def to_internal_value(self, data):
+        if hasattr(data, 'copy'):
+            data = data.copy()
+
+        for field_name in ('price_date', 'purchase_date'):
+            if data.get(field_name) in ('', None):
+                data[field_name] = None
+
+        return super().to_internal_value(data)
 
     def create(self, validated_data):
         dealers_data = validated_data.pop('dealers', [])
