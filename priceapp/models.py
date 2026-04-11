@@ -64,6 +64,9 @@ class ProductPrice(BaseModel):
     box_tax = models.FloatField(default=0)
     box_tax_price = models.FloatField(default=0)
 
+    price_date = models.DateField(blank=True, null=True)
+    purchase_date = models.DateField(blank=True, null=True)
+
     def __str__(self):
         return f"{self.product_size.product.name} - {self.product_size.size} ({self.payment_type})"
 
