@@ -48,8 +48,17 @@ class ProductSizeSerializer(serializers.ModelSerializer):
         # Create Product Prices & Dealers for this size
         for price_data in prices_data:
             dealers_data = price_data.pop('dealers', [])
+            
+            # Clean date fields
+            for date_field in ['price_date', 'purchase_date']:
+                if price_data.get(date_field) in ('', None):
+                    price_data[date_field] = None
+                    
             product_price = ProductPrice.objects.create(product_size=product_size, **price_data)
             for dealer_data in dealers_data:
+                # Clean date fields for dealer
+                if dealer_data.get('purchase_date') in ('', None):
+                    dealer_data['purchase_date'] = None
                 Dealer.objects.create(product_price=product_price, **dealer_data)
         
         return product_size
@@ -218,12 +227,22 @@ class ProductSerializer(serializers.ModelSerializer):
                     dealers_data = price_data.pop('dealers', [])
                     print(f"🤝 Found {len(dealers_data)} dealers for price")
                     
+                    # Clean date fields
+                    for date_field in ['price_date', 'purchase_date']:
+                        if price_data.get(date_field) in ('', None):
+                            price_data[date_field] = None
+                    
                     product_price = ProductPrice.objects.create(product_size=product_size, **price_data)
                     print(f"✅ Created price: {product_price.price} (ID: {product_price.id})")
                     logger.info(f"Created price: {product_price.price} (ID: {product_price.id})")
                     
                     for dealer_index, dealer_data in enumerate(dealers_data):
                         print(f"🤝 Processing dealer {dealer_index + 1}: {dealer_data}")
+                        
+                        # Clean date fields for dealer
+                        if dealer_data.get('purchase_date') in ('', None):
+                            dealer_data['purchase_date'] = None
+                            
                         Dealer.objects.create(product_price=product_price, **dealer_data)
                         print(f"✅ Created dealer: {dealer_data.get('dlr_name', 'Unknown')}")
                         logger.info(f"Created dealer: {dealer_data.get('dlr_name', 'Unknown')}")
@@ -297,12 +316,22 @@ class ProductSerializer(serializers.ModelSerializer):
                     dealers_data = price_data.pop('dealers', [])
                     print(f"🤝 Found {len(dealers_data)} dealers for price")
                     
+                    # Clean date fields
+                    for date_field in ['price_date', 'purchase_date']:
+                        if price_data.get(date_field) in ('', None):
+                            price_data[date_field] = None
+                    
                     product_price = ProductPrice.objects.create(product_size=product_size, **price_data)
                     print(f"✅ Created price: {product_price.price} (ID: {product_price.id})")
                     logger.info(f"Created price: {product_price.price} (ID: {product_price.id})")
                     
                     for dealer_index, dealer_data in enumerate(dealers_data):
                         print(f"🤝 Processing dealer {dealer_index + 1}: {dealer_data}")
+                        
+                        # Clean date fields for dealer
+                        if dealer_data.get('purchase_date') in ('', None):
+                            dealer_data['purchase_date'] = None
+                            
                         Dealer.objects.create(product_price=product_price, **dealer_data)
                         print(f"✅ Created dealer: {dealer_data.get('dlr_name', 'Unknown')}")
                         logger.info(f"Created dealer: {dealer_data.get('dlr_name', 'Unknown')}")

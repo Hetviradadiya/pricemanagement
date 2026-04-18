@@ -277,114 +277,6 @@ function undoRemovePhoto(button) {
     .catch((err) => console.error("Error restoring photo preview:", err));
 }
 
-// --- Add Dealer Row ---
-function addDealerRow(priceRow, productId, sizeId, priceId) {
-  const dealerRow = document.createElement("tr");
-  dealerRow.classList.add(
-    `product_${productId}_size_${sizeId}_price_${priceId}_dealer`
-  );
-
-  dealerRow.innerHTML = `
-        <td colspan="16"></td>
-        <td>${createInput(
-          "text",
-          "",
-          "form-control",
-          'placeholder="Dealer"'
-        )}</td>
-        <td>${createInput(
-          "text",
-          "",
-          "form-control",
-          'placeholder="SLOL"'
-        )}</td>
-        <td>${createInput(
-          "date",
-          "",
-          "form-control",
-          'onclick="this.showPicker();"'
-        )}</td>
-        <td>${createInput(
-          "number",
-          "",
-          "form-control",
-          'placeholder="Price" oninput="updateDealerCalc(this)"'
-        )}</td>
-        <td>
-          <div>${createInput(
-            "number",
-            "",
-            "form-control",
-            'placeholder="%" oninput="updateDealerCalc(this)"'
-          )}</div>
-          <small class="text-muted">₹${createInput(
-            "number",
-            "",
-            "form-control readonly-field",
-            'readonly tabindex="-1" style="font-size:10px;height:20px;"'
-          )}</small>
-        </td>
-        <td>
-          <div>${createInput(
-            "number",
-            "",
-            "form-control",
-            'placeholder="%" oninput="updateDealerCalc(this)"'
-          )}</div>
-          <small class="text-muted">₹${createInput(
-            "number",
-            "",
-            "form-control readonly-field",
-            'readonly tabindex="-1" style="font-size:10px;height:20px;"'
-          )}</small>
-        </td>
-        <td>${createInput(
-          "number",
-          "",
-          "form-control",
-          'oninput="updateDealerCalc(this)"'
-        )}</td>
-        <td>
-          <div>${createInput(
-            "number",
-            "",
-            "form-control",
-            'placeholder="%" oninput="updateDealerCalc(this)"'
-          )}</div>
-          <small class="text-muted">₹${createInput(
-            "number",
-            "",
-            "form-control readonly-field",
-            'readonly tabindex="-1" style="font-size:10px;height:20px;"'
-          )}</small>
-        </td>
-        <td>
-          <div>${createInput(
-            "number",
-            "",
-            "form-control",
-            'placeholder="%" oninput="updateDealerCalc(this)"'
-          )}</div>
-          <small class="text-muted">₹${createInput(
-            "number",
-            "",
-            "form-control readonly-field",
-            'readonly tabindex="-1" style="font-size:10px;height:20px;"'
-          )}</small>
-        </td>    
-        <td>
-          <button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">🗑</button>
-        </td>
-        `;
-
-  const existingDealers = document.querySelectorAll(
-    `.product_${productId}_size_${sizeId}_price_${priceId}_dealer`
-  );
-  const insertAfter = existingDealers.length
-    ? existingDealers[existingDealers.length - 1]
-    : priceRow;
-  insertAfter.parentNode.insertBefore(dealerRow, insertAfter.nextSibling);
-}
 
 // --- Add Price Row ---
 function addPriceRow(productId, sizeId) {
@@ -474,8 +366,19 @@ function addPriceRow(productId, sizeId) {
             'readonly tabindex="-1" style="font-size:10px;height:20px;"'
           )}</small>
         </td>
+        <td>${createInput(
+          "date",
+          "",
+          "form-control",
+          'onclick="this.showPicker();"'
+        )}</td>
+        <td>${createInput(
+          "date",
+          "",
+          "form-control",
+          'onclick="this.showPicker();"'
+        )}</td>
         <td colspan="10">
-          <button class="btn btn-sm btn-info" onclick="addDealerRow(this.closest('tr'),${productId},${sizeId},${priceId})">+ Deal</button>
           <button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">🗑</button>
         </td>
         `;
@@ -861,6 +764,8 @@ document.getElementById("saveProductsBtn").addEventListener("click", () => {
           box_discount_price: parseFloat(priceInputs[8]?.value || 0),
           box_tax: parseFloat(priceInputs[9]?.value || 0),
           box_tax_price: parseFloat(priceInputs[10]?.value || 0),
+          price_date: safeDate(priceInputs[11]?.value),
+          purchase_date: safeDate(priceInputs[12]?.value),
           dealers: [],
         };
 
@@ -1070,7 +975,6 @@ async function updateProduct(productId, productData) {
 
     if (response.ok) {
       cancelEdit();
-      window.location.reload();
     } else {
       console.error(`❌ Error response status: ${response.status}`);
       console.error(`❌ Error response body:`, result);
@@ -1418,31 +1322,20 @@ function displayFilteredProducts(data) {
                                   }</small></td>`
                                 : ""
                             }
-                            <td>${dealer?.dlr_name || ""}</td>
-                            <td>${dealer?.slol || ""}</td>
-                            <td>${dealer?.purchase_date || ""}</td>
-                            <td>${dealer?.purchase_price || ""}</td>
-                            <td><div>${
-                              dealer?.purchase_discount || ""
-                            }%</div><small class="text-muted">₹${
-                  dealer?.purchase_discount_price || ""
-                }</small></td>
-                            <td><div>${
-                              dealer?.purchase_tax || ""
-                            }%</div><small class="text-muted">₹${
-                  dealer?.purchase_tax_price || ""
-                }</small></td>
-                            <td>${dealer?.purchase_box || ""}</td>
-                            <td><div>${
-                              dealer?.purchase_box_discount || ""
-                            }%</div><small class="text-muted">₹${
-                  dealer?.purchase_box_discount_price || ""
-                }</small></td>
-                            <td><div>${
-                              dealer?.purchase_box_tax || ""
-                            }%</div><small class="text-muted">₹${
-                  dealer?.purchase_box_tax_price || ""
-                }</small></td>
+                            ${
+                              dIndex === 0
+                                ? `<td rowspan="${priceRowspan}">${
+                                    price.price_date || ""
+                                  }</td>`
+                                : ""
+                            }
+                            ${
+                              dIndex === 0
+                                ? `<td rowspan="${priceRowspan}">${
+                                    price.purchase_date || ""
+                                  }</td>`
+                                : ""
+                            }
                             ${
                               firstProductRow
                                 ? `<td rowspan="${totalRows}">
@@ -1554,7 +1447,8 @@ function displayFilteredProducts(data) {
                           }%</div><small class="text-muted">₹${
                 price.box_tax_price || ""
               }</small></td>
-                          <td colspan="9">No dealers</td>
+                          <td>${price.price_date || ""}</td>
+                          <td>${price.purchase_date || ""}</td>
                           ${
                             firstProductRow
                               ? `<td rowspan="${totalRows}">
@@ -1620,7 +1514,7 @@ function displayFilteredProducts(data) {
                       <td>${size.code || ""}</td>
                       <td>${size.hsn || ""}</td>
                       <td>${size.mrp || ""}</td>
-                      <td colspan="16">No prices defined</td>
+                      <td colspan="9">No prices defined</td>
                       ${
                         firstProductRow
                           ? `<td rowspan="${totalRows}">
@@ -1655,7 +1549,7 @@ function displayFilteredProducts(data) {
             }')" title="Click to view full size">`
           : ""
       }</td>
-                  <td colspan="20">No sizes defined</td>
+                  <td colspan="13">No sizes defined</td>
                   <td>
                     <button class="btn btn-sm btn-success" onclick="editProduct(${
                       product.id
@@ -1826,77 +1720,12 @@ function populateFormWithProductData(product) {
               inputIndex++;
               if (inputs[inputIndex])
                 inputs[inputIndex].value = price.box_tax_price || "";
-
-              // Add dealers for this price
-              if (price.dealers && price.dealers.length > 0) {
-                price.dealers.forEach((dealer, dealerIndex) => {
-                  // Add dealer row using existing function
-                  addDealerRow(currentPriceRow, 0, actualSizeId, actualPriceId);
-
-                  // Fill dealer data - get all dealer rows for this price and select the most recent one
-                  const dealerRows = document.querySelectorAll(
-                    `.product_0_size_${actualSizeId}_price_${actualPriceId}_dealer`
-                  );
-                  const currentDealerRow = dealerRows[dealerRows.length - 1]; // Get the last added dealer row
-
-                  if (currentDealerRow) {
-                    const dealerInputs =
-                      currentDealerRow.querySelectorAll("input");
-                    let dealerInputIndex = 0;
-
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.dlr_name || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value = dealer.slol || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_date || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_price || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_discount || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_discount_price || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_tax || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_tax_price || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_box || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_box_discount || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_box_discount_price || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_box_tax || "";
-                    dealerInputIndex++;
-                    if (dealerInputs[dealerInputIndex])
-                      dealerInputs[dealerInputIndex].value =
-                        dealer.purchase_box_tax_price || "";
-                  }
-                });
-              }
+              inputIndex++;
+              if (inputs[inputIndex])
+                inputs[inputIndex].value = price.price_date || "";
+              inputIndex++;
+              if (inputs[inputIndex])
+                inputs[inputIndex].value = price.purchase_date || "";
             }
           });
         }
