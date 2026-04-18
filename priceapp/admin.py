@@ -9,14 +9,8 @@ from django import forms
 # ----------------- Dealer Inline (Nested) -----------------
 class DealerInline(nested_admin.NestedTabularInline):
     model = Dealer
-    extra = 1
-    fields = (
-        "dlr_name", "slol", "purchase_date",
-        "purchase_price", "purchase_discount", "purchase_discount_price",
-        "purchase_tax", "purchase_tax_price",
-        "purchase_box", "purchase_box_discount",
-        "purchase_box_discount_price", "purchase_box_tax", "purchase_box_tax_price",
-    )
+    extra = 0
+    fields = () # All fields moved to ProductPrice
 
 
 # ----------------- ProductPrice Inline (Nested) -----------------
