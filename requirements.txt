@@ -18,3 +18,5 @@ cloudinary==1.44.1
 django-cloudinary-storage==0.3.0
 drf-extra-fields==3.7.0
 psycopg2-binary
+python-barcode 
+Pillow
