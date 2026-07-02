@@ -181,6 +181,52 @@
             <button class="btn btn-outline-dark d-flex align-items-center justify-content-center" id="addProductBtn" style="height:44px;min-width:44px;font-size:1.1rem;white-space:nowrap;background:#f8f9fa;">
               <i class="fa fa-plus me-1"></i> Add Product
             </button>
+            
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary text-dark dropdown-toggle d-flex align-items-center" type="button" id="paymentFilterBtn" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" style="height:44px; background:#f8f9fa;">
+                <i class="fa-solid fa-filter me-1"></i> Pay Type
+              </button>
+              <ul class="dropdown-menu p-2 shadow" aria-labelledby="paymentFilterBtn" style="min-width: 200px;">
+                <li><h6 class="dropdown-header">Filter by Payment Type</h6></li>
+                <li>
+                  <div class="form-check m-2">
+                    <input class="form-check-input payment-type-cb desktop-cb" type="checkbox" value="cash" id="pt-cash" onchange="triggerFetch()">
+                    <label class="form-check-label w-100" for="pt-cash">Cash</label>
+                  </div>
+                </li>
+                <li>
+                  <div class="form-check m-2">
+                    <input class="form-check-input payment-type-cb desktop-cb" type="checkbox" value="bill" id="pt-bill" onchange="triggerFetch()">
+                    <label class="form-check-label w-100" for="pt-bill">Bill</label>
+                  </div>
+                </li>
+                <li>
+                  <div class="form-check m-2">
+                    <input class="form-check-input payment-type-cb desktop-cb" type="checkbox" value="sale_cash" id="pt-sale-cash" onchange="triggerFetch()">
+                    <label class="form-check-label w-100" for="pt-sale-cash">Sale Cash</label>
+                  </div>
+                </li>
+                <li>
+                  <div class="form-check m-2">
+                    <input class="form-check-input payment-type-cb desktop-cb" type="checkbox" value="sale_bill" id="pt-sale-bill" onchange="triggerFetch()">
+                    <label class="form-check-label w-100" for="pt-sale-bill">Sale Bill</label>
+                  </div>
+                </li>
+                <li>
+                  <div class="form-check m-2">
+                    <input class="form-check-input payment-type-cb desktop-cb" type="checkbox" value="frd_cash" id="pt-frd-cash" onchange="triggerFetch()">
+                    <label class="form-check-label w-100" for="pt-frd-cash">Frd Cash</label>
+                  </div>
+                </li>
+                <li>
+                  <div class="form-check m-2">
+                    <input class="form-check-input payment-type-cb desktop-cb" type="checkbox" value="frd_bill" id="pt-frd-bill" onchange="triggerFetch()">
+                    <label class="form-check-label w-100" for="pt-frd-bill">Frd Bill</label>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
             <div class="flex-grow-1 position-relative">
               <input
                 type="text"
@@ -227,14 +273,30 @@
             </div>
           </div>
           <div class="row mb-2">
-            <div class="col-12">
-              <div class="position-relative w-100">
+            <div class="col-12 d-flex gap-2">
+              <div class="dropdown">
+                <button class="btn btn-outline-secondary text-dark dropdown-toggle d-flex align-items-center h-100" type="button" id="paymentFilterBtnMobile" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                  <i class="fa-solid fa-filter"></i>
+                </button>
+                <ul class="dropdown-menu p-2 shadow" aria-labelledby="paymentFilterBtnMobile" style="min-width: 200px;">
+                  <li><h6 class="dropdown-header">Filter by Payment Type</h6></li>
+                  <li><div class="form-check m-2"><input class="form-check-input payment-type-cb mobile-cb" type="checkbox" value="cash" id="pt-cash-mob" onchange="syncCheckboxesAndFetch(this, 'cash')"><label class="form-check-label w-100" for="pt-cash-mob">Cash</label></div></li>
+                  <li><div class="form-check m-2"><input class="form-check-input payment-type-cb mobile-cb" type="checkbox" value="bill" id="pt-bill-mob" onchange="syncCheckboxesAndFetch(this, 'bill')"><label class="form-check-label w-100" for="pt-bill-mob">Bill</label></div></li>
+                  <li><div class="form-check m-2"><input class="form-check-input payment-type-cb mobile-cb" type="checkbox" value="sale_cash" id="pt-sale-cash-mob" onchange="syncCheckboxesAndFetch(this, 'sale_cash')"><label class="form-check-label w-100" for="pt-sale-cash-mob">Sale Cash</label></div></li>
+                  <li><div class="form-check m-2"><input class="form-check-input payment-type-cb mobile-cb" type="checkbox" value="sale_bill" id="pt-sale-bill-mob" onchange="syncCheckboxesAndFetch(this, 'sale_bill')"><label class="form-check-label w-100" for="pt-sale-bill-mob">Sale Bill</label></div></li>
+                  <li><div class="form-check m-2"><input class="form-check-input payment-type-cb mobile-cb" type="checkbox" value="frd_cash" id="pt-frd-cash-mob" onchange="syncCheckboxesAndFetch(this, 'frd_cash')"><label class="form-check-label w-100" for="pt-frd-cash-mob">Frd Cash</label></div></li>
+                  <li><div class="form-check m-2"><input class="form-check-input payment-type-cb mobile-cb" type="checkbox" value="frd_bill" id="pt-frd-bill-mob" onchange="syncCheckboxesAndFetch(this, 'frd_bill')"><label class="form-check-label w-100" for="pt-frd-bill-mob">Frd Bill</label></div></li>
+                </ul>
+              </div>
+
+              <div class="position-relative flex-grow-1">
                 <input
                   type="text"
                   id="searchBoxMobile"
                   class="search-box w-100"
                   placeholder="Search products..."
                   oninput="searchProducts(this.value)"
+                  style="height: 100%; min-height: 40px;"
                 >
                 <button
                   id="clearSearchBtnMobile"
@@ -353,6 +415,7 @@
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/products.js' %}"></script>
     <script>
       // Override global logout to call API logout endpoint, clear tokens and redirect to login
@@ -381,8 +444,7 @@
           window.location.href = "/login/";
         }
       }
-    </script>
-    <script>
+    
       let currentZoom = 1;
       let isDragging = false;
       let startX, startY, currentX = 0, currentY = 0;

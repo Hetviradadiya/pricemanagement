@@ -4,8 +4,8 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
-from ..models import Product, ProductPrice, Dealer
+from django.db.models import Q, Prefetch
+from ..models import Product, ProductPrice, Dealer, ProductSize
 from ..serializers import ProductSerializer, ProductPriceSerializer, DealerSerializer
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -38,9 +38,35 @@ class BulkProductCreateAPIView(APIView):
 
     def get(self, request):
         search = request.query_params.get('search', None)
+        payment_type_param = request.query_params.get('payment_type', None)
 
-        products = Product.objects.prefetch_related('sizes__prices__dealers').all()
+        # 1. Base Query with optional Payment Type filtering
+        if payment_type_param:
+            # Parse comma-separated types (e.g. "cash,bill")
+            payment_types = [pt.strip() for pt in payment_type_param.split(',')]
+            
+            # 2. Prefetch only prices that match the selected payment types
+            filtered_prices = ProductPrice.objects.filter(
+                payment_type__in=payment_types
+            ).prefetch_related('dealers')
+            
+            filtered_sizes = ProductSize.objects.prefetch_related(
+                Prefetch('prices', queryset=filtered_prices)
+            )
+            
+            # 3. Filter products to only include those that have the selected payment type
+            products = Product.objects.prefetch_related(
+                Prefetch('sizes', queryset=filtered_sizes)
+            ).filter(
+                Q(sizes__prices__payment_type__in=payment_types) | 
+                Q(sizes__isnull=True) | 
+                Q(sizes__prices__isnull=True)
+            ).distinct()
+        else:
+            # Default behavior if no filter is applied
+            products = Product.objects.prefetch_related('sizes__prices__dealers').all()
 
+        # 4. Apply existing Search filter
         if search:
             products = products.filter(
                 Q(name__icontains=search) |

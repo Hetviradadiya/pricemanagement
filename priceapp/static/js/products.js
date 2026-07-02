@@ -4,6 +4,7 @@ let sizeCount = 0;
 let editingProductId = null;
 let allProducts = []; // Store all products for search functionality
 let currentSearchTerm = ""; // Track current search term
+let currentPaymentTypes = "";
 let searchTimeout = null; // For debouncing search requests
 
 // Debounced search function to avoid too many API calls
@@ -46,8 +47,25 @@ function searchProducts(searchTerm) {
 
   // Debounce the API call - wait 300ms after user stops typing
   searchTimeout = setTimeout(() => {
-    loadProductsFromBackend(searchTerm);
+    loadProductsFromBackend(searchTerm, currentPaymentTypes);
   }, 300);
+}
+
+// Syncs state between Desktop and Mobile checkboxes
+function syncCheckboxesAndFetch(element, val) {
+  const matchingCheckboxes = document.querySelectorAll(`.payment-type-cb[value="${val}"]`);
+  matchingCheckboxes.forEach(cb => {
+      cb.checked = element.checked;
+  });
+  triggerFetch();
+}
+
+// Extracts selected payment types and triggers the API fetch
+function triggerFetch() {
+  const selectedCheckboxes = document.querySelectorAll('.desktop-cb:checked');
+  currentPaymentTypes = Array.from(selectedCheckboxes).map(cb => cb.value).join(',');
+  
+  loadProductsFromBackend(currentSearchTerm, currentPaymentTypes);
 }
 
 function logout() {
@@ -90,7 +108,7 @@ function clearSearch() {
 
   // Clear search term and reload all products from backend
   currentSearchTerm = "";
-  loadProductsFromBackend();
+  loadProductsFromBackend("", currentPaymentTypes);
 }
 
 function createInput(
@@ -1088,13 +1106,24 @@ function getCookie(name) {
 }
 // Removed old incorrect display function
 
-// Load products from backend with optional search parameter
-function loadProductsFromBackend(searchTerm = "") {
+// Load products from backend with optional search and payment type parameters
+function loadProductsFromBackend(searchTerm = "", paymentTypes = "") {
   let url = "/api/product-create/";
+  const params = new URLSearchParams();
   
   // Add search query parameter if search term exists
   if (searchTerm && searchTerm.trim()) {
-    url += `?search=${encodeURIComponent(searchTerm.trim())}`;
+    params.append("search", searchTerm.trim());
+  }
+  
+  // Add payment_type query parameter if filters are selected
+  if (paymentTypes && paymentTypes.trim()) {
+    params.append("payment_type", paymentTypes.trim());
+  }
+
+  const queryString = params.toString();
+  if (queryString) {
+    url += `?${queryString}`;
   }
 
   fetch(url)
@@ -1125,7 +1154,7 @@ function loadProductsFromBackend(searchTerm = "") {
 
 // Override the display function to handle nested structure correctly
 function displayProductsWithNestedStructure() {
-  loadProductsFromBackend(currentSearchTerm);
+  loadProductsFromBackend(currentSearchTerm, currentPaymentTypes);
 }
 
 // Display filtered products (used by both main display and search)
