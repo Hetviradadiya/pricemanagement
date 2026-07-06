@@ -8,6 +8,23 @@ from django.db.models import Q, Prefetch
 from ..models import Product, ProductPrice, Dealer, ProductSize
 from ..serializers import ProductSerializer, ProductPriceSerializer, DealerSerializer
 
+from rest_framework.pagination import PageNumberPagination
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 25  # Number of products per page
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+    
+    # Add this method to customize the JSON output
+    def get_paginated_response(self, data):
+        return Response({
+            'count': self.page.paginator.count,
+            'total_pages': self.page.paginator.num_pages,
+            'current_page': self.page.number,
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'results': data
+        })
+
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.prefetch_related('prices__dealers', 'sizes').all().order_by('-id')
     serializer_class = ProductSerializer
@@ -35,6 +52,9 @@ class DealerViewSet(viewsets.ModelViewSet):
 class BulkProductCreateAPIView(APIView):
     authentication_classes = [JWTAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    
+    # Assign pagination class
+    pagination_class = StandardResultsSetPagination
 
     def get(self, request):
         search = request.query_params.get('search', None)
@@ -82,8 +102,13 @@ class BulkProductCreateAPIView(APIView):
             ).distinct()
         
         products = products.order_by('-id')
-        serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        # 3. Apply Pagination
+        paginator = self.pagination_class()
+        paginated_products = paginator.paginate_queryset(products, request, view=self)
+        
+        serializer = ProductSerializer(paginated_products, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         for key, value in request.data.items():

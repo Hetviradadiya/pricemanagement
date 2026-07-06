@@ -6,6 +6,8 @@ let allProducts = []; // Store all products for search functionality
 let currentSearchTerm = ""; // Track current search term
 let currentPaymentTypes = "";
 let searchTimeout = null; // For debouncing search requests
+let currentPage = 1; 
+let totalPages = 1;
 
 // Debounced search function to avoid too many API calls
 function searchProducts(searchTerm) {
@@ -47,7 +49,8 @@ function searchProducts(searchTerm) {
 
   // Debounce the API call - wait 300ms after user stops typing
   searchTimeout = setTimeout(() => {
-    loadProductsFromBackend(searchTerm, currentPaymentTypes);
+    currentPage = 1; // Reset page on new search
+    loadProductsFromBackend(searchTerm, currentPaymentTypes, currentPage);
   }, 300);
 }
 
@@ -65,7 +68,8 @@ function triggerFetch() {
   const selectedCheckboxes = document.querySelectorAll('.desktop-cb:checked');
   currentPaymentTypes = Array.from(selectedCheckboxes).map(cb => cb.value).join(',');
   
-  loadProductsFromBackend(currentSearchTerm, currentPaymentTypes);
+  currentPage = 1; // Reset page on filter change
+  loadProductsFromBackend(currentSearchTerm, currentPaymentTypes, currentPage);
 }
 
 function logout() {
@@ -108,7 +112,8 @@ function clearSearch() {
 
   // Clear search term and reload all products from backend
   currentSearchTerm = "";
-  loadProductsFromBackend("", currentPaymentTypes);
+  currentPage = 1;
+  loadProductsFromBackend("", currentPaymentTypes, currentPage);
 }
 
 function createInput(
@@ -1107,7 +1112,7 @@ function getCookie(name) {
 // Removed old incorrect display function
 
 // Load products from backend with optional search and payment type parameters
-function loadProductsFromBackend(searchTerm = "", paymentTypes = "") {
+function loadProductsFromBackend(searchTerm = "", paymentTypes = "", page = 1) {
   let url = "/api/product-create/";
   const params = new URLSearchParams();
   
@@ -1121,6 +1126,9 @@ function loadProductsFromBackend(searchTerm = "", paymentTypes = "") {
     params.append("payment_type", paymentTypes.trim());
   }
 
+  // Append current page
+  params.append("page", page);
+
   const queryString = params.toString();
   if (queryString) {
     url += `?${queryString}`;
@@ -1129,21 +1137,37 @@ function loadProductsFromBackend(searchTerm = "", paymentTypes = "") {
   fetch(url)
     .then((res) => res.json())
     .then((data) => {
-      // Store products globally
-      allProducts = data;
-      // Display the products
-      displayFilteredProducts(data);
+      // DRF Pagination returns data inside a 'results' array
+      const productsList = data.results !== undefined ? data.results : data;
       
+      allProducts = productsList;
+      displayFilteredProducts(productsList);
+      
+      // Handle Pagination UI Dynamically (using Backend Truth)
+      if (data.total_pages !== undefined) {
+        totalPages = data.total_pages;
+        currentPage = data.current_page || page;
+        renderPagination(currentPage, totalPages);
+        
+      } else if (data.count !== undefined) {
+        // Fallback (just in case the old API response structure hits)
+        let backendPageSize = 25; 
+        totalPages = Math.ceil(data.count / backendPageSize);
+        renderPagination(page, totalPages);
+        
+      } else {
+        document.getElementById("paginationControls").innerHTML = ""; // Clear if no pagination
+      }
+
       // Show search summary if searching
       const searchSummary = document.getElementById("searchSummary");
       if (searchSummary && searchTerm && searchTerm.trim()) {
-        if (data.length === 0) {
+        const totalItems = data.count !== undefined ? data.count : productsList.length;
+        if (totalItems === 0) {
           searchSummary.textContent = `No results found for "${searchTerm}"`;
           searchSummary.className = "text-muted small mb-2";
         } else {
-          searchSummary.textContent = `Found ${data.length} product${
-            data.length === 1 ? "" : "s"
-          } matching "${searchTerm}"`;
+          searchSummary.textContent = `Found ${totalItems} product${totalItems === 1 ? "" : "s"} matching "${searchTerm}"`;
           searchSummary.className = "text-success small mb-2";
         }
         searchSummary.style.display = "block";
@@ -1152,9 +1176,76 @@ function loadProductsFromBackend(searchTerm = "", paymentTypes = "") {
     .catch((err) => console.error("Error loading products:", err));
 }
 
+// Generate Pagination HTML (1, 2, 3...)
+function renderPagination(current, total) {
+  const paginationUl = document.getElementById("paginationControls");
+  if (!paginationUl) return;
+  
+  paginationUl.innerHTML = "";
+  
+  // Force these to be actual math numbers, not strings
+  current = parseInt(current) || 1;
+  total = Math.max(1, parseInt(total) || 1); 
+
+  // Previous Button
+  const prevLi = document.createElement("li");
+  prevLi.className = `page-item ${current <= 1 ? 'disabled' : ''}`;
+  // If disabled, block the click completely. If active, go to current - 1
+  prevLi.innerHTML = `<a class="page-link" href="#" ${current <= 1 ? 'tabindex="-1" aria-disabled="true"' : `onclick="changePage(event, ${current - 1})"`}>Previous</a>`;
+  paginationUl.appendChild(prevLi);
+
+  // Dynamic Page Numbers (Show window of 5 pages max)
+  let startPage = Math.max(1, current - 2);
+  let endPage = Math.min(total, current + 2);
+
+  // Adjust window if we are near the ends
+  if (current <= 2) endPage = Math.min(5, total);
+  if (current >= total - 1) startPage = Math.max(1, total - 4);
+  
+  // Final safety check to make sure pages don't go out of bounds
+  endPage = Math.min(endPage, total);
+  startPage = Math.max(1, startPage);
+
+  for (let i = startPage; i <= endPage; i++) {
+    const li = document.createElement("li");
+    li.className = `page-item ${i === current ? 'active' : ''}`;
+    li.innerHTML = `<a class="page-link" href="#" onclick="changePage(event, ${i})">${i}</a>`;
+    paginationUl.appendChild(li);
+  }
+
+  // Next Button
+  const nextLi = document.createElement("li");
+  nextLi.className = `page-item ${current >= total ? 'disabled' : ''}`;
+  // If disabled, block the click completely. If active, go to current + 1
+  nextLi.innerHTML = `<a class="page-link" href="#" ${current >= total ? 'tabindex="-1" aria-disabled="true"' : `onclick="changePage(event, ${current + 1})"`}>Next</a>`;
+  paginationUl.appendChild(nextLi);
+}
+
+// Handle Page Clicks
+function changePage(event, newPage) {
+  event.preventDefault();
+  
+  // Force to number
+  newPage = parseInt(newPage);
+  
+  // Don't do anything if trying to go below page 1 or above total pages
+  if (newPage < 1 || newPage > totalPages) return;
+  
+  currentPage = newPage;
+  
+  // Fetch new data
+  loadProductsFromBackend(currentSearchTerm, currentPaymentTypes, currentPage);
+  
+  // Scroll to top of table smoothly when page changes
+  const header = document.querySelector(".header-section");
+  if (header) {
+      header.scrollIntoView({ behavior: "smooth" });
+  }
+}
+
 // Override the display function to handle nested structure correctly
 function displayProductsWithNestedStructure() {
-  loadProductsFromBackend(currentSearchTerm, currentPaymentTypes);
+  loadProductsFromBackend(currentSearchTerm, currentPaymentTypes, currentPage);
 }
 
 // Display filtered products (used by both main display and search)
