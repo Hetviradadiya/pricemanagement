@@ -8,6 +8,8 @@ import barcode
 from barcode.writer import ImageWriter
 from io import BytesIO
 from django.core.files.base import File
+import uuid
+from django.core.files.base import ContentFile
 
 # Create your models here.
 class BaseModel(models.Model):
@@ -23,43 +25,32 @@ class Product(BaseModel):
     name = models.CharField(max_length=200)
     company_name = models.CharField(max_length=200, blank=True, null=True)
     vp_name = models.CharField(max_length=200, blank=True, null=True)
-    barcode = models.CharField(max_length=100, blank=True, null=True, unique=True)
-    barcode_image = models.ImageField(upload_to="barcodes/", blank=True, null=True)
+    barcode = models.CharField(max_length=64, unique=True, blank=True, null=True, db_index=True)
+    barcode_image = models.ImageField(upload_to='barcodes/', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        is_new = self.pk is None
-        
-        # Save first to get the Product ID
-        super().save(*args, **kwargs)
-        
-        # If it's a new product and doesn't have a barcode yet
-        if is_new and not self.barcode:
-            current_year = timezone.now().year
-            
-            # 1. Generate the Barcode Number (e.g., 2026000045)
-            self.barcode = f"{current_year}{self.id:06d}"
-            
-            # 2. Generate the Barcode Image (Code128 format)
-            CODE128 = barcode.get_barcode_class('code128')
-            
-            # Create the barcode image without the text underneath (we'll display text via HTML)
-            bc = CODE128(self.barcode, writer=ImageWriter())
-            
-            # 3. Save the image to memory
+        # Generate barcode only once upon initial creation
+        if not self.barcode:
+            # Generate a 12-digit unique numeric code (or alphanumeric code using Code128)
+            # Using Code128 format allows flexibility
+            unique_code = f"RT{uuid.uuid4().hex[:10].upper()}"
+            self.barcode = unique_code
+
+        # Generate barcode image if not already present
+        if not self.barcode_image:
+            code128 = barcode.get_barcode_class('code128')
+            writer = ImageWriter()
+            # Disable extra whitespace margins for compact printing
+            writer.set_options({'write_text': True, 'module_height': 12.0})
+
+            bc = code128(self.barcode, writer=writer)
             buffer = BytesIO()
-            bc.write(buffer, options={
-                'write_text': True,       # Turns the text back on
-                'text_distance': 5.0,     # Adds a little breathing room between the bars and the text
-                'module_height': 10.0     # Keeps the height of the barcode the same
-            })
-            
-            # 4. Save the image to the Django ImageField
+            bc.write(buffer)
             file_name = f"barcode_{self.barcode}.png"
-            self.barcode_image.save(file_name, File(buffer), save=False)
-            
-            # 5. Save the updated fields to the database
-            self.save(update_fields=['barcode', 'barcode_image'])
+            self.barcode_image.save(file_name, ContentFile(buffer.getvalue()), save=False)
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

@@ -26,7 +26,7 @@ class StandardResultsSetPagination(PageNumberPagination):
         })
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.prefetch_related('prices__dealers', 'sizes').all().order_by('-id')
+    queryset = Product.objects.prefetch_related('sizes__prices__dealers', 'sizes').all().order_by('-id')
     serializer_class = ProductSerializer
     authentication_classes = [JWTAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]

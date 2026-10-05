@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Print Product Barcodes</title>
+  <style>
+    @media print {
+      .no-print { display: none; }
+      body { margin: 0; padding: 0; }
+    }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 20px; }
+    .toolbar { margin-bottom: 20px; }
+    .label-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .barcode-card {
+      background: #fff;
+      border: 1px dashed #999;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .prod-name { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
+    .company { font-size: 10px; color: #555; }
+    .barcode-img { width: 100%; max-height: 70px; object-fit: contain; }
+  </style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <button onclick="window.print()" style="padding: 10px 18px; font-size: 15px; cursor: pointer;">
+      🖨️ Print Labels
+    </button>
+  </div>
+  <div class="label-grid">
+    {% for product in products %}
+      {% if product.barcode_image %}
+      <div class="barcode-card">
+        <div class="prod-name">{{ product.name }}</div>
+        {% if product.company_name %}<div class="company">{{ product.company_name }}</div>{% endif %}
+        <img class="barcode-img" src="{{ product.barcode_image.url }}" alt="{{ product.barcode }}">
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</body>
+</html>

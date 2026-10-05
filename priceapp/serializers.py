@@ -66,10 +66,23 @@ class ProductSizeSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     photo = serializers.ImageField(required=False, allow_null=True, allow_empty_file=True)
     sizes = serializers.SerializerMethodField()  # Use method field for output
+    barcode_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'company_name', 'vp_name', 'description', 
+            'photo', 'barcode', 'barcode_image', 'sizes'
+        ]
+        read_only_fields = ['barcode', 'barcode_image']
+
+    def get_barcode_image(self, obj):
+        if obj.barcode_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.barcode_image.url)
+            return obj.barcode_image.url
+        return None
     
     def get_sizes(self, obj):
         """Return properly serialized sizes for API responses"""

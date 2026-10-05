@@ -62,8 +62,8 @@ class ProductSizeInline(nested_admin.NestedTabularInline):
 # ----------------- Product Admin (Nested) -----------------
 @admin.register(Product)
 class ProductAdmin(nested_admin.NestedModelAdmin, ImportExportModelAdmin):
-    list_display = ("id", "photo", "name")
-    search_fields = ("name",)
+    list_display = ("id", "photo", "name", "barcode", "barcode_image")
+    search_fields = ("name", "barcode")
     inlines = [ProductSizeInline]  # ProductSize belongs to Product
 
     class Media:

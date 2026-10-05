@@ -5,7 +5,8 @@ from priceapp.View.ProductsView import ProductViewSet, ProductPriceViewSet, Deal
 from priceapp.views import (
     price_dashboard, LoginAPIView, LogoutAPIView, user_login, user_logout,
     GetUserDetailsAPIView, UpdateUserDetailsAPIView, ChangePasswordAPIView
-)
+)   
+from priceapp.View.barcodeview import *
 
 router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='products')
@@ -28,7 +29,11 @@ urlpatterns = [
     path('api/user/update/', UpdateUserDetailsAPIView.as_view(), name='user-update'),
     path('api/user/change-password/', ChangePasswordAPIView.as_view(), name='change-password'),
     
-    path('api/', include(router.urls)),
     path('api/product-create/', BulkProductCreateAPIView.as_view(), name='bulk-products-create'),
     path('api/product-create/<int:pk>/', BulkProductCreateAPIView.as_view(), name='bulk-products-update'),
+
+    path('api/products/scan/', ProductBarcodeScanView.as_view(), name='product-scan'),
+    path('api/products/generate-bulk-barcode-pdf/', GenerateBulkBarcodePdfView.as_view(), name='product-bulk-barcode-pdf'),
+
+    path('api/', include(router.urls)),
 ]

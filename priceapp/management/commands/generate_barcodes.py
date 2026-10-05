@@ -1,58 +1,64 @@
-from django.core.management.base import BaseCommand
-from django.utils import timezone
-from django.db.models import Q
-from django.core.files.base import File
+import uuid
 from io import BytesIO
+from django.core.management.base import BaseCommand
+from django.core.files.base import ContentFile
 import barcode
 from barcode.writer import ImageWriter
-from priceapp.models import Product  # Adjust 'priceapp' if your app name is different
+from priceapp.models import Product
+
 
 class Command(BaseCommand):
-    help = 'Generates missing barcode numbers and images for existing products.'
+    help = 'Generate barcodes and barcode image files for existing products missing them.'
 
-    def handle(self, *args, **kwargs):
-        # Find products missing either the barcode string OR the barcode image
-        products_missing_barcodes = Product.objects.filter(
-            Q(barcode__isnull=True) | Q(barcode__exact='') |
-            Q(barcode_image__isnull=True) | Q(barcode_image__exact='')
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--force',
+            action='store_true',
+            help='Regenerate barcode and barcode images for ALL products, even if they already have one.',
         )
+
+    def handle(self, *args, **options):
+        force = options['force']
         
-        total_found = products_missing_barcodes.count()
-        
-        if total_found == 0:
-            self.stdout.write(self.style.WARNING('No products found missing barcodes or images. You are all set!'))
+        if force:
+            products = Product.objects.all()
+            self.stdout.write(self.style.WARNING(f'Force mode active: checking all {products.count()} products...'))
+        else:
+            # Only pick products where barcode or barcode_image is empty
+            products = Product.objects.filter(barcode__isnull=True) | Product.objects.filter(barcode='') | Product.objects.filter(barcode_image='')
+            products = products.distinct()
+
+        total = products.count()
+        if total == 0:
+            self.stdout.write(self.style.SUCCESS('All products already have barcodes and images. Nothing to do!'))
             return
 
-        self.stdout.write(f"Found {total_found} products needing barcode updates. Generating now...")
-        
-        current_year = timezone.now().year
-        success_count = 0
+        self.stdout.write(f'Found {total} products needing barcodes. Starting generation...')
 
-        for product in products_missing_barcodes:
-            try:
-                # 1. Generate the Barcode Number if it doesn't exist yet
-                if not product.barcode:
-                    product.barcode = f"{current_year}{product.id:06d}"
-                
-                # 2. Generate the Barcode Image (Code128 format)
-                CODE128 = barcode.get_barcode_class('code128')
-                bc = CODE128(product.barcode, writer=ImageWriter())
-                
-                # Save it to memory
+        code128_class = barcode.get_barcode_class('code128')
+        writer = ImageWriter()
+        writer.set_options({'write_text': True, 'module_height': 12.0})
+
+        updated_count = 0
+
+        for product in products:
+            # 1. Assign barcode string if missing or forced
+            if not product.barcode or force:
+                product.barcode = f"RT{uuid.uuid4().hex[:10].upper()}"
+
+            # 2. Generate barcode PNG image if missing or forced
+            if not product.barcode_image or force:
+                bc = code128_class(product.barcode, writer=writer)
                 buffer = BytesIO()
-                bc.write(buffer, options={'write_text': False, 'module_height': 10.0})
+                bc.write(buffer)
                 
-                # 3. Save the image file to the Django ImageField
-                file_name = f"barcode_{product.barcode}.png"
-                product.barcode_image.save(file_name, File(buffer), save=False)
-                
-                # 4. Save both the string and the image to the database
-                product.save(update_fields=['barcode', 'barcode_image'])
-                success_count += 1
-                
-                # Print progress to the terminal
-                self.stdout.write(self.style.SUCCESS(f'Successfully generated barcode & image for {product.name} ({product.barcode})'))
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(f'Failed to update product ID {product.id}: {str(e)}'))
+                filename = f"barcode_{product.barcode}.png"
+                product.barcode_image.save(filename, ContentFile(buffer.getvalue()), save=False)
 
-        self.stdout.write(self.style.SUCCESS(f'\nFinished! Successfully updated {success_count} products.'))
+            # Save product record without triggering extra signals or resets
+            product.save(update_fields=['barcode', 'barcode_image'])
+            updated_count += 1
+
+            self.stdout.write(f'[{updated_count}/{total}] Processed: {product.name} -> Barcode: {product.barcode}')
+
+        self.stdout.write(self.style.SUCCESS(f'\nSuccessfully generated barcodes for {updated_count} products!'))
